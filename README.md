@@ -67,8 +67,8 @@ pip install -e .
 
 | Dataset | Download Link |
 |---------|---------------|
-| MovieCORE | [GDrive](https://drive.google.com/file/d/16GWbIQ5CpD6un_LJYn04WYf9D0cojWNi/view?usp=sharing) |
-| MovieChat-1k | [GDrive](link) (Coming soon) |
+| MovieCORE | [GDrive](https://drive.google.com/file/d/16GWbIQ5CpD6un_LJYn04WYf9D0cojWNi/view?usp=sharing) / [HuggingFace](https://huggingface.co/Joslefaure/HERMES/blob/main/moviecore_checkpoint.pth) |
+| MovieChat-1k | [GDrive](https://drive.google.com/file/d/15E5f2DyzkA4sjgNk7d7EGoafU8KMDMl8/view?usp=drive_link) / [HuggingFace](https://huggingface.co/Joslefaure/HERMES/blob/main/moviechat_checkpoint.pth) |
 | LVU | [GDrive](link) (Coming soon) |
 | Breakfast | [GDrive](link) (Coming soon) |
 | COIN | [GDrive](link) (Coming soon) |
