@@ -12,41 +12,112 @@ import random as rnd
 import tarfile
 import zipfile
 
-import decord
 import webdataset as wds
 import numpy as np
 import torch
 from torch.utils.data.dataset import IterableDataset, ChainDataset
-from decord import VideoReader
 from lavis.common.registry import registry
 from lavis.datasets.datasets.base_dataset import ConcatDataset
 from tqdm import tqdm
 
-decord.bridge.set_bridge("torch")
+try:
+    import decord
+    from decord import VideoReader
+
+    decord.bridge.set_bridge("torch")
+    _HAS_DECORD = True
+except Exception:
+    decord = None
+    VideoReader = None
+    _HAS_DECORD = False
+
 MAX_INT = registry.get("MAX_INT")
 
 
 def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, sampling="uniform"):
-    vr = VideoReader(uri=video_path, height=height, width=width)
+    if _HAS_DECORD:
+        vr = VideoReader(uri=video_path, height=height, width=width)
 
-    vlen = len(vr)
+        vlen = len(vr)
+        start, end = 0, vlen
+
+        n_frms = min(n_frms, vlen)
+
+        if sampling == "uniform":
+            indices = np.arange(start, end, vlen / n_frms).astype(int)
+        elif sampling == "headtail":
+            indices_h = sorted(rnd.sample(range(vlen // 2), n_frms // 2))
+            indices_t = sorted(rnd.sample(range(vlen // 2, vlen), n_frms // 2))
+            indices = indices_h + indices_t
+        else:
+            raise NotImplementedError
+
+        # get_batch -> T, H, W, C
+        frms = vr.get_batch(indices).permute(3, 0, 1, 2).float()  # (C, T, H, W)
+        return frms
+
+    # OpenCV fallback when decord is unavailable on the platform.
+    try:
+        import cv2
+    except Exception as exc:
+        raise RuntimeError(
+            "Neither decord nor OpenCV video backend is available."
+        ) from exc
+
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise RuntimeError(f"Failed to open video: {video_path}")
+
+    vlen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if vlen <= 0:
+        cap.release()
+        raise RuntimeError(f"Could not read frame count for video: {video_path}")
+
     start, end = 0, vlen
-
     n_frms = min(n_frms, vlen)
+    if n_frms <= 0:
+        cap.release()
+        raise RuntimeError(f"Invalid number of frames requested: {n_frms}")
 
     if sampling == "uniform":
-        indices = np.arange(start, end, vlen / n_frms).astype(int)
+        indices = np.arange(start, end, vlen / n_frms).astype(int).tolist()
     elif sampling == "headtail":
         indices_h = sorted(rnd.sample(range(vlen // 2), n_frms // 2))
         indices_t = sorted(rnd.sample(range(vlen // 2, vlen), n_frms // 2))
         indices = indices_h + indices_t
     else:
+        cap.release()
         raise NotImplementedError
 
-    # get_batch -> T, H, W, C
-    frms = vr.get_batch(indices).permute(3, 0, 1, 2).float()  # (C, T, H, W)
+    frame_map = {}
+    wanted = set(indices)
+    idx = 0
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        if idx in wanted:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame_map[idx] = torch.from_numpy(frame).permute(2, 0, 1).float()
+            if len(frame_map) == len(wanted):
+                break
+        idx += 1
+    cap.release()
 
-    return frms
+    if len(frame_map) == 0:
+        raise RuntimeError(f"No frames extracted from video: {video_path}")
+
+    # Fill missing frames by nearest available index.
+    extracted_indices = sorted(frame_map.keys())
+    frames = []
+    for target_idx in indices:
+        if target_idx in frame_map:
+            frames.append(frame_map[target_idx])
+            continue
+        nearest = min(extracted_indices, key=lambda x: abs(x - target_idx))
+        frames.append(frame_map[nearest])
+
+    return torch.stack(frames, dim=1)  # (C, T, H, W)
 
 
 def apply_to_sample(f, sample):

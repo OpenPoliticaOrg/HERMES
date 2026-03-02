@@ -1,0 +1,95 @@
+{
+  "nodes": [
+    "Cam1",
+    "Cam2",
+    "Cam3",
+    "Cam4",
+    "EdgeNorth",
+    "EdgeSouth",
+    "Fusion"
+  ],
+  "edges": [
+    {"id": "Cam1->EdgeNorth", "src": "Cam1", "dst": "EdgeNorth", "capacity": 10, "delay": 1, "loss": 0.01},
+    {"id": "Cam2->EdgeNorth", "src": "Cam2", "dst": "EdgeNorth", "capacity": 10, "delay": 1, "loss": 0.01},
+    {"id": "Cam3->EdgeSouth", "src": "Cam3", "dst": "EdgeSouth", "capacity": 10, "delay": 1, "loss": 0.01},
+    {"id": "Cam4->EdgeSouth", "src": "Cam4", "dst": "EdgeSouth", "capacity": 10, "delay": 1, "loss": 0.01},
+
+    {"id": "EdgeNorth->Fusion", "src": "EdgeNorth", "dst": "Fusion", "capacity": 14, "delay": 1, "loss": 0.01},
+    {"id": "EdgeSouth->Fusion", "src": "EdgeSouth", "dst": "Fusion", "capacity": 14, "delay": 1, "loss": 0.01},
+    {"id": "EdgeNorth->EdgeSouth", "src": "EdgeNorth", "dst": "EdgeSouth", "capacity": 5, "delay": 1, "loss": 0.01},
+    {"id": "EdgeSouth->EdgeNorth", "src": "EdgeSouth", "dst": "EdgeNorth", "capacity": 5, "delay": 1, "loss": 0.01},
+
+    {"id": "Cam1->Cam2", "src": "Cam1", "dst": "Cam2", "capacity": 4, "delay": 1, "loss": 0.02},
+    {"id": "Cam2->Cam1", "src": "Cam2", "dst": "Cam1", "capacity": 4, "delay": 1, "loss": 0.02},
+    {"id": "Cam2->Cam3", "src": "Cam2", "dst": "Cam3", "capacity": 4, "delay": 1, "loss": 0.02},
+    {"id": "Cam3->Cam2", "src": "Cam3", "dst": "Cam2", "capacity": 4, "delay": 1, "loss": 0.02},
+    {"id": "Cam3->Cam4", "src": "Cam3", "dst": "Cam4", "capacity": 4, "delay": 1, "loss": 0.02},
+    {"id": "Cam4->Cam3", "src": "Cam4", "dst": "Cam3", "capacity": 4, "delay": 1, "loss": 0.02}
+  ],
+  "traffic": [
+    {"id": "alert_cam1", "kind": "alert", "src": "Cam1", "dst": "Fusion", "rate": 0.8, "ttl_steps": 3, "copies": 2},
+    {"id": "alert_cam2", "kind": "alert", "src": "Cam2", "dst": "Fusion", "rate": 0.8, "ttl_steps": 3, "copies": 2},
+    {"id": "alert_cam3", "kind": "alert", "src": "Cam3", "dst": "Fusion", "rate": 0.8, "ttl_steps": 3, "copies": 2},
+    {"id": "alert_cam4", "kind": "alert", "src": "Cam4", "dst": "Fusion", "rate": 0.8, "ttl_steps": 3, "copies": 2},
+
+    {"id": "track_cam1", "kind": "track", "src": "Cam1", "dst": "Fusion", "rate": 2.6, "ttl_steps": 8, "copies": 1},
+    {"id": "track_cam2", "kind": "track", "src": "Cam2", "dst": "Fusion", "rate": 2.6, "ttl_steps": 8, "copies": 1},
+    {"id": "track_cam3", "kind": "track", "src": "Cam3", "dst": "Fusion", "rate": 2.6, "ttl_steps": 8, "copies": 1},
+    {"id": "track_cam4", "kind": "track", "src": "Cam4", "dst": "Fusion", "rate": 2.6, "ttl_steps": 8, "copies": 1},
+
+    {"id": "handoff_1_2", "kind": "handoff", "src": "Cam1", "dst": "Cam2", "rate": 0.7, "ttl_steps": 4, "copies": 1},
+    {"id": "handoff_2_3", "kind": "handoff", "src": "Cam2", "dst": "Cam3", "rate": 0.7, "ttl_steps": 4, "copies": 1},
+    {"id": "handoff_3_4", "kind": "handoff", "src": "Cam3", "dst": "Cam4", "rate": 0.7, "ttl_steps": 4, "copies": 1},
+
+    {"id": "heartbeat_1", "kind": "heartbeat", "src": "Cam1", "dst": "Fusion", "rate": 0.6, "ttl_steps": 2, "copies": 1},
+    {"id": "heartbeat_2", "kind": "heartbeat", "src": "Cam2", "dst": "Fusion", "rate": 0.6, "ttl_steps": 2, "copies": 1},
+    {"id": "heartbeat_3", "kind": "heartbeat", "src": "Cam3", "dst": "Fusion", "rate": 0.6, "ttl_steps": 2, "copies": 1},
+    {"id": "heartbeat_4", "kind": "heartbeat", "src": "Cam4", "dst": "Fusion", "rate": 0.6, "ttl_steps": 2, "copies": 1}
+  ],
+  "default_context": "normal",
+  "context_schedule": {
+    "0": "normal",
+    "80": "crowded",
+    "160": "uplink_loss",
+    "240": "cam2_failure"
+  },
+  "contexts": {
+    "normal": {
+      "traffic_scale": {"*": 1.0},
+      "edge_capacity_scale": {"*": 1.0},
+      "edge_loss_add": {"*": 0.0}
+    },
+    "crowded": {
+      "traffic_scale": {"track_cam1": 1.5, "track_cam2": 1.5, "track_cam3": 1.5, "track_cam4": 1.5, "alert_cam1": 1.3, "alert_cam2": 1.3, "alert_cam3": 1.3, "alert_cam4": 1.3},
+      "edge_capacity_scale": {"EdgeNorth->Fusion": 0.9, "EdgeSouth->Fusion": 0.9, "*": 1.0},
+      "edge_loss_add": {"*": 0.0}
+    },
+    "uplink_loss": {
+      "traffic_scale": {"*": 1.0},
+      "edge_capacity_scale": {"*": 0.9},
+      "edge_loss_add": {"Cam1->EdgeNorth": 0.04, "Cam2->EdgeNorth": 0.04, "Cam3->EdgeSouth": 0.04, "Cam4->EdgeSouth": 0.04, "*": 0.01}
+    },
+    "cam2_failure": {
+      "traffic_scale": {"*": 1.0},
+      "edge_capacity_scale": {"Cam2->EdgeNorth": 0.05, "Cam2->Cam1": 0.05, "Cam2->Cam3": 0.05, "*": 1.0},
+      "edge_loss_add": {"Cam2->EdgeNorth": 0.15, "Cam2->Cam1": 0.15, "Cam2->Cam3": 0.15, "*": 0.0}
+    }
+  },
+  "simulation": {
+    "steps": 320,
+    "seed": 11,
+    "traffic_mode": "poisson"
+  },
+  "policies": {
+    "min_cost_lp": {
+      "send_reward": 1200.0,
+      "alpha_delay": 1.0,
+      "alpha_distance": 1.2,
+      "alpha_downstream_queue": 0.08
+    },
+    "backpressure": {
+      "delay_weight": 0.25
+    }
+  }
+}
+

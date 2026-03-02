@@ -120,3 +120,33 @@ We thank the authors of the following repositories for open-sourcing their code.
 
 *Icon made by Freepik from www.flaticon.com*
 
+## Extension Docs (This Workspace)
+
+- Repository + extensions documentation:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/repo_extensions_documentation.md`
+- Dynamic event tagging and Markov design:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/dynamic_event_tagging_design.md`
+- Network message passing + surveillance algorithm specs:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/network_message_passing_algorithms.md`
+- Research paper draft for this extension work:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/research_paper_draft_networked_contextual_hermes.md`
+- LaTeX manuscript source and rendered PDF:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/paper/networked_contextual_hermes.tex`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/paper/networked_contextual_hermes.pdf`
+- Presentation deck for this extension work:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/presentation_networked_contextual_hermes.md`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/presentation_networked_contextual_hermes.html`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/presentation_networked_contextual_hermes.pdf`
+
+### Build Commands (Extension Artifacts)
+
+```bash
+# Build paper PDF from LaTeX
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/papers/build_networked_contextual_hermes_paper.sh
+
+# Build/refesh visual assets used by slides (uses existing logs; set REBUILD_DATA=1 to regenerate)
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/presentations/build_networked_contextual_hermes_visuals.sh
+
+# Build web HTML slides + static PDF slides
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/presentations/build_networked_contextual_hermes_slides.sh
+```

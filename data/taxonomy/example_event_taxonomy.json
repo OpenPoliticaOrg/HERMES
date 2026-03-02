@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "event_id": "coin:put_on_hair_extensions",
+      "label": "put on hair extensions",
+      "aliases": ["apply hair extensions"],
+      "dataset": "coin_cls",
+      "parents": ["domain:nursing_and_care"],
+      "metadata": {"domain": "nursing and care"}
+    },
+    {
+      "event_id": "coin:change_car_tire",
+      "label": "change car tire",
+      "aliases": ["replace car tire"],
+      "dataset": "coin_cls",
+      "parents": ["domain:vehicle_maintenance"],
+      "metadata": {"domain": "vehicle"}
+    },
+    {
+      "event_id": "lvu:director:steven",
+      "label": "steven",
+      "aliases": ["steven spielberg"],
+      "dataset": "lvu_cls",
+      "parents": ["facet:director"],
+      "metadata": {"facet": "director"}
+    },
+    {
+      "event_id": "lvu:director:ron",
+      "label": "ron",
+      "aliases": ["ron howard"],
+      "dataset": "lvu_cls",
+      "parents": ["facet:director"],
+      "metadata": {"facet": "director"}
+    },
+    {
+      "event_id": "lvu:genre:action",
+      "label": "action",
+      "dataset": "lvu_cls",
+      "parents": ["facet:genre"],
+      "metadata": {"facet": "genre"}
+    },
+    {
+      "event_id": "lvu:genre:comedy",
+      "label": "comedy",
+      "dataset": "lvu_cls",
+      "parents": ["facet:genre"],
+      "metadata": {"facet": "genre"}
+    }
+  ],
+  "classifiers": [
+    {
+      "classifier_id": "coin_default",
+      "dataset": "coin_cls",
+      "active": true,
+      "prompt": "{}",
+      "candidate_event_ids": [
+        "coin:put_on_hair_extensions",
+        "coin:change_car_tire"
+      ]
+    },
+    {
+      "classifier_id": "lvu_director",
+      "dataset": "lvu_cls",
+      "active": true,
+      "prompt": "{}",
+      "candidate_event_ids": [
+        "lvu:director:steven",
+        "lvu:director:ron"
+      ],
+      "rules": {
+        "question_contains_any": ["director"]
+      }
+    },
+    {
+      "classifier_id": "lvu_genre",
+      "dataset": "lvu_cls",
+      "active": true,
+      "prompt": "{}",
+      "candidate_event_ids": [
+        "lvu:genre:action",
+        "lvu:genre:comedy"
+      ],
+      "rules": {
+        "question_contains_any": ["genre"]
+      }
+    }
+  ],
+  "defaults": {
+    "classifier_prompt": "{}"
+  }
+}

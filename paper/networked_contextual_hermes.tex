@@ -1,0 +1,158 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black
+}
+
+\title{Networked Context-Conditional Event Inference and Coordination for Multi-Feed Surveillance}
+\author{HERMES Extension Working Draft}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present a practical extension of HERMES for real-time multi-feed surveillance by coupling context-aware event inference with network-level message-passing optimization. The system combines dynamic event candidate routing, pluggable observation classifiers, context-conditional inhomogeneous Markov filtering with sliding-window updates, and policy-driven network transport simulation for inter-node coordination. On synthetic surveillance mesh scenarios with staged stress contexts (crowding, uplink loss, node degradation), the framework supports online adaptation and policy comparison between receding-horizon min-cost linear programming and decentralized backpressure routing. The implementation includes reproducible scripts, diagnostics, and weighted policy ranking for deployment-oriented decision making.
+\end{abstract}
+
+\section{Introduction}
+Long-form video understanding in distributed camera systems depends on both perception quality and communication quality. In practice, coordination failures such as stale handoffs, duplicate alerts, or network congestion can dominate operational outcomes even when local model confidence is high.
+
+We address this by integrating contextual event inference and network coordination evaluation in a single runnable pipeline. The goal is engineering utility: reproducible experiments, explicit KPIs, and policy selection under operator-defined priorities.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=1.5em]
+  \item Dynamic event inference stack with taxonomy routing, configurable observation classifier fusion, and context-conditional Markov filtering.
+  \item Online runtime diagnostics with live transition/posterior visualization and interactive context switching.
+  \item Network message-passing simulator with two policies: receding-horizon min-cost LP and backpressure.
+  \item Surveillance-specific coordination KPIs (handoff success, stale ratio, duplicate alerts, recovery behavior).
+  \item Direction-aware weighted policy ranking for deployment-specific optimization targets.
+\end{enumerate}
+
+\section{System Overview}
+At each time window $t$, the pipeline performs:
+\begin{enumerate}[leftmargin=1.5em]
+  \item candidate event selection via taxonomy,
+  \item model ranking and confidence scoring,
+  \item observation classifier fusion,
+  \item context-conditional Markov posterior update,
+  \item network transport simulation for inter-node coordination.
+\end{enumerate}
+
+This yields a perception-to-transport loop suitable for end-to-end surveillance system evaluation.
+
+\section{Methods}
+\subsection{Dynamic event inference}
+Given context/question input $x_t$, ranked event candidates produce confidence scores. Observation classifiers fuse model outputs with custom heuristics and prototypes to form likelihood-like scores $\tilde{p}_t(e)$.
+
+\subsection{Context-conditional Markov filtering}
+Posterior updates are:
+\begin{equation}
+\hat{p}_t = p_{t-1} T_{c_t,t}, \qquad
+p_t(e) \propto \hat{p}_t(e)\,\tilde{p}_t(e),
+\end{equation}
+where $T_{c_t,t}$ may depend on ecological context, schedule, or provider logic.
+
+The implementation supports:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{window\_size}: sliding-window refiltering,
+  \item \texttt{markov\_order}: higher-memory prior blending,
+  \item optional symbolic transfer entropy diagnostics.
+\end{itemize}
+
+\subsection{Network message passing model}
+We model a directed graph $G=(V,E)$ with time-varying edge capacities $C_e(t)$, delays $d_e$, and losses $p_e(t)$. Traffic commodities include source/destination/rate and surveillance metadata (\texttt{kind}, \texttt{ttl\_steps}, \texttt{copies}).
+
+\paragraph{Policy A: Receding-horizon min-cost LP.}
+\begin{equation}
+\min_{x_{e,k}(t)\ge 0}\sum_{e,k} c_{e,k}(t)\,x_{e,k}(t)
+\end{equation}
+subject to edge-capacity and queue-availability constraints.
+
+\paragraph{Policy B: Backpressure.}
+\begin{equation}
+P_{e,k}(t)=\left(Q_{u,k}(t)-Q_{v,k}(t)\right)
++\beta \Delta \mathrm{dist}_{u\rightarrow v,k}
+-\gamma d_e.
+\end{equation}
+Commodities with positive pressure are prioritized under edge capacities.
+
+\subsection{Weighted policy ranking}
+For each metric $m$, direction-aware normalization maps values to $[0,1]$. Policy score:
+\begin{equation}
+S(\pi)=\frac{\sum_m w_m \cdot \mathrm{norm}_m(\pi)}{\sum_m w_m},
+\end{equation}
+where larger $S(\pi)$ indicates better fit to operator priorities.
+
+\section{Implementation}
+\subsection{Core modules}
+\begin{itemize}[leftmargin=1.5em]
+  \item Event stack: \texttt{lavis/common/event\_taxonomy.py}, \texttt{lavis/common/event\_observation.py}, \texttt{lavis/common/event\_markov.py}, \texttt{stream\_online.py}
+  \item Network stack: \texttt{tools/network\_message\_passing\_sim.py}, \texttt{tools/network\_message\_passing\_kpi\_report.py}
+\end{itemize}
+
+\subsection{Run scripts}
+\begin{itemize}[leftmargin=1.5em]
+  \item Single surveillance run: \texttt{run\_scripts/network\_message\_passing/surveillance\_test.sh}
+  \item Monte Carlo: \texttt{run\_scripts/network\_message\_passing/surveillance\_monte\_carlo.sh}
+  \item KPI and ranking report: \texttt{run\_scripts/network\_message\_passing/kpi\_report.sh}
+\end{itemize}
+
+\section{Experimental Protocol}
+The included surveillance mesh scenario uses:
+\begin{itemize}[leftmargin=1.5em]
+  \item 4 camera nodes, 2 edge nodes, 1 fusion node,
+  \item traffic types: alert, track, handoff, heartbeat,
+  \item context schedule: \texttt{normal} $\rightarrow$ \texttt{crowded} $\rightarrow$ \texttt{uplink\_loss} $\rightarrow$ \texttt{cam2\_failure}.
+\end{itemize}
+
+Evaluation is performed via multi-seed Monte Carlo runs and aggregated KPI summaries.
+
+\section{Metrics}
+We report both packet-level and unique-message-level indicators:
+\begin{itemize}[leftmargin=1.5em]
+  \item delivery ratio, drop ratio, average/p95 latency,
+  \item unique delivery ratio,
+  \item stale unique delivery ratio (TTL-based),
+  \item duplicate delivery ratio,
+  \item handoff success and timely handoff success,
+  \item alert duplicate rate,
+  \item backlog recovery after context transitions.
+\end{itemize}
+
+\section{Representative Findings (Synthetic)}
+In representative synthetic surveillance runs with provided defaults, min-cost LP shows higher delivery ratio and lower p95 latency than backpressure, with improved timely handoff success and lower stale message rates. Backpressure remains a robust decentralized baseline and may be preferable under different objective weightings or centralized-solver constraints.
+
+\section{Limitations}
+\begin{enumerate}[leftmargin=1.5em]
+  \item Packet-level simulator is synthetic and does not yet replay real telemetry traces.
+  \item Min-cost LP is one-step receding-horizon optimization, not full finite-horizon global control.
+  \item The current framework does not jointly optimize model compute scheduling and network routing.
+\end{enumerate}
+
+\section{Conclusion}
+We introduced a runnable extension to HERMES that unifies context-aware event inference and surveillance coordination evaluation. The resulting framework supports online diagnostics, stress testing, reproducible policy comparison, and weighted policy selection for deployment-oriented system design.
+
+\section*{Reproducibility Commands}
+\begin{verbatim}
+bash run_scripts/network_message_passing/surveillance_monte_carlo.sh 20 320
+bash run_scripts/network_message_passing/kpi_report.sh \
+  "logs/network_message_passing/monte_carlo/run_*.json" \
+  "logs/network_message_passing/monte_carlo_summary.json" \
+  "handoff_timely_success_rate=4,p95_latency=3,stale_unique_ratio=3,delivery_ratio=2"
+\end{verbatim}
+
+\end{document}
+

@@ -1,0 +1,59 @@
+{
+  "nodes": ["A", "B", "C", "D", "E", "F"],
+  "edges": [
+    {"id": "A->B", "src": "A", "dst": "B", "capacity": 8, "delay": 1, "loss": 0.01},
+    {"id": "A->C", "src": "A", "dst": "C", "capacity": 6, "delay": 1, "loss": 0.01},
+    {"id": "B->C", "src": "B", "dst": "C", "capacity": 3, "delay": 1, "loss": 0.01},
+    {"id": "B->D", "src": "B", "dst": "D", "capacity": 6, "delay": 1, "loss": 0.01},
+    {"id": "C->D", "src": "C", "dst": "D", "capacity": 7, "delay": 1, "loss": 0.01},
+    {"id": "C->F", "src": "C", "dst": "F", "capacity": 5, "delay": 2, "loss": 0.01},
+    {"id": "D->E", "src": "D", "dst": "E", "capacity": 8, "delay": 1, "loss": 0.01},
+    {"id": "F->E", "src": "F", "dst": "E", "capacity": 4, "delay": 1, "loss": 0.01},
+    {"id": "D->F", "src": "D", "dst": "F", "capacity": 3, "delay": 1, "loss": 0.01}
+  ],
+  "traffic": [
+    {"id": "c_A_E", "src": "A", "dst": "E", "rate": 3.2},
+    {"id": "c_C_E", "src": "C", "dst": "E", "rate": 2.4},
+    {"id": "c_B_F", "src": "B", "dst": "F", "rate": 1.7}
+  ],
+  "default_context": "normal",
+  "context_schedule": {
+    "0": "normal",
+    "60": "rush",
+    "120": "degraded"
+  },
+  "contexts": {
+    "normal": {
+      "traffic_scale": {"*": 1.0},
+      "edge_capacity_scale": {"*": 1.0},
+      "edge_loss_add": {"*": 0.0}
+    },
+    "rush": {
+      "traffic_scale": {"*": 1.2, "c_A_E": 1.5},
+      "edge_capacity_scale": {"*": 1.0, "D->E": 0.75},
+      "edge_loss_add": {"*": 0.0}
+    },
+    "degraded": {
+      "traffic_scale": {"*": 1.0},
+      "edge_capacity_scale": {"*": 0.7},
+      "edge_loss_add": {"*": 0.03}
+    }
+  },
+  "simulation": {
+    "steps": 180,
+    "seed": 7,
+    "traffic_mode": "poisson"
+  },
+  "policies": {
+    "min_cost_lp": {
+      "send_reward": 1000.0,
+      "alpha_delay": 1.0,
+      "alpha_distance": 1.0,
+      "alpha_downstream_queue": 0.05
+    },
+    "backpressure": {
+      "delay_weight": 0.2
+    }
+  }
+}
+

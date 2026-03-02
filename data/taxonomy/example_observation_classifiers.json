@@ -1,0 +1,43 @@
+{
+  "combination": "weighted_mean",
+  "classifiers": [
+    {
+      "classifier_id": "proto_puton",
+      "event_id": "coin:put_on_hair_extensions",
+      "type": "prototype_label",
+      "weight": 0.7,
+      "include_model_score": true,
+      "model_weight": 0.3,
+      "params": {
+        "prototypes": [
+          "put on hair extensions",
+          "apply hair extensions"
+        ],
+        "use_confidence_weight": true
+      }
+    },
+    {
+      "classifier_id": "binary_puton_conf",
+      "event_id": "coin:put_on_hair_extensions",
+      "type": "confidence_threshold",
+      "weight": 1.0,
+      "params": {
+        "threshold": 0.45,
+        "low_score": 0.1,
+        "high_score": 0.9
+      }
+    },
+    {
+      "classifier_id": "keyword_director",
+      "event_id": "lvu:director:steven",
+      "type": "keyword_binary",
+      "weight": 1.0,
+      "params": {
+        "keywords": ["director", "steven"],
+        "target_fields": ["question", "labels"],
+        "hit_score": 0.85,
+        "miss_score": 0.15
+      }
+    }
+  ]
+}

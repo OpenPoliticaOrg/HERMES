@@ -824,17 +824,23 @@ class Blip2VicunaInstruct_HERMES(Blip2Base):
         samples,
         candidates,
         n_segments=1,
+        return_losses=False,
     ):
         self.llm_tokenizer.padding_side = "left"
 
         # If candidates is a list of lists, each sample has its candidates, then we need to iterate one by one
         if type(candidates[0]) == list:
-            results = []
+            rank_results = []
+            loss_results = []
 
             for i in range(samples["image"].size(0)):
+                sample_prompt = samples["prompt"]
+                if isinstance(sample_prompt, list):
+                    sample_prompt = [sample_prompt[i]]
+
                 this_sample = {
                     "image": samples["image"][i].unsqueeze(0),
-                    "prompt": samples["prompt"],
+                    "prompt": sample_prompt,
                 }
 
                 if "text_input" in samples.keys():
@@ -850,24 +856,51 @@ class Blip2VicunaInstruct_HERMES(Blip2Base):
                     this_sample["caption"] = [samples["caption"][i]]
 
                 this_result = self._predict_class(
-                    this_sample, candidates[i], n_segments
+                    this_sample,
+                    candidates[i],
+                    n_segments,
+                    return_losses=return_losses,
                 )
-                results.append(this_result)
+                if return_losses:
+                    this_ranks, this_losses = this_result
+                    rank_results.append(this_ranks)
+                    loss_results.append(this_losses)
+                else:
+                    rank_results.append(this_result)
+
+            if return_losses:
+                try:
+                    ranks = torch.cat(rank_results, dim=0)
+                    losses = torch.cat(loss_results, dim=0)
+                except Exception:
+                    ranks = rank_results
+                    losses = loss_results
+                return {"ranks": ranks, "losses": losses}
 
             try:
-                results = torch.cat(results, dim=0)
-            except:
-                results = [res.tolist()[0] for res in results]
+                rank_results = torch.cat(rank_results, dim=0)
+            except Exception:
+                rank_results = [res.tolist()[0] for res in rank_results]
 
-            return results
+            return rank_results
 
-        return self._predict_class(samples, candidates, n_segments)
+        rank_output = self._predict_class(
+            samples,
+            candidates,
+            n_segments,
+            return_losses=return_losses,
+        )
+        if return_losses:
+            ranks, losses = rank_output
+            return {"ranks": ranks, "losses": losses}
+        return rank_output
 
     def _predict_class(
         self,
         samples,
         candidates,
         n_segments=1,
+        return_losses=False,
     ):
         image = samples["image"]
         prompt = samples["prompt"]
@@ -1018,6 +1051,8 @@ class Blip2VicunaInstruct_HERMES(Blip2Base):
                 seg_len = n_cands // n_segments
                 if n == (n_segments - 1):
                     seg_len = n_cands - seg_len * (n_segments - 1)
+                if seg_len <= 0:
+                    continue
 
                 start_i = n * (n_cands // n_segments)
                 end_i = start_i + seg_len
@@ -1093,6 +1128,8 @@ class Blip2VicunaInstruct_HERMES(Blip2Base):
             all_losses = torch.cat(all_losses, dim=-1)
             output_class_ranks = torch.argsort(all_losses, dim=-1)
 
+        if return_losses:
+            return output_class_ranks, all_losses
         return output_class_ranks
 
     def _lemmatize(self, answers):

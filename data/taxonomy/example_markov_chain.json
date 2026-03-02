@@ -1,0 +1,41 @@
+{
+  "states": [
+    "coin:put_on_hair_extensions",
+    "coin:change_car_tire"
+  ],
+  "transition_mode": "context",
+  "context_key": "ecological_context",
+  "context_fallback": "default",
+  "markov_order": 1,
+  "window_size": 12,
+  "transfer_entropy_mode": "none",
+  "transfer_entropy_source": "context",
+  "transfer_entropy_target_order": 1,
+  "transfer_entropy_source_order": 1,
+  "initial": [0.5, 0.5],
+  "context_initial": {
+    "garage": [0.2, 0.8],
+    "salon": [0.8, 0.2],
+    "default": [0.5, 0.5]
+  },
+  "transition": [
+    [0.9, 0.1],
+    [0.2, 0.8]
+  ],
+  "context_transitions": {
+    "garage": [
+      [0.6, 0.4],
+      [0.2, 0.8]
+    ],
+    "salon": [
+      [0.9, 0.1],
+      [0.5, 0.5]
+    ],
+    "default": [
+      [0.85, 0.15],
+      [0.25, 0.75]
+    ]
+  },
+  "smoothing": 1e-09,
+  "learn_transitions": false
+}

@@ -1,0 +1,1273 @@
+{
+  "per_run": [
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_1.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9333333333333333,
+          "avg_latency": 3.129522108083966,
+          "backlog_peak": 510,
+          "delivery_ratio": 0.8947648861063008,
+          "drop_ratio": 0.03729852138004529,
+          "duplicate_delivery_ratio": 0.17945566286215978,
+          "handoff_success_rate": 0.8725341426403642,
+          "handoff_timely_success_rate": 0.7708649468892261,
+          "p95_latency": 7.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 7.2,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 60.7,
+              "from_context": "crowded",
+              "recovery_steps": 2,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 5.3,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.0,
+          "stale_unique_ratio": 0.11466198419666374,
+          "unique_delivery_ratio": 0.9002529244388239
+        },
+        {
+          "alert_duplicate_rate": 0.9149659863945578,
+          "avg_latency": 2.4970809007506256,
+          "backlog_peak": 56,
+          "delivery_ratio": 0.9583055814573065,
+          "drop_ratio": 0.040495537498334885,
+          "duplicate_delivery_ratio": 0.17587446878064728,
+          "handoff_success_rate": 0.9726858877086495,
+          "handoff_timely_success_rate": 0.9726858877086495,
+          "p95_latency": 5.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 37.6,
+              "from_context": "crowded",
+              "recovery_steps": 6,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.1,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 2.0,
+          "stale_unique_ratio": 0.06309251389342922,
+          "unique_delivery_ratio": 0.9671198229528928
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_10.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9300911854103343,
+          "avg_latency": 2.7170953101361572,
+          "backlog_peak": 499,
+          "delivery_ratio": 0.8937263385613845,
+          "drop_ratio": 0.03880475932936722,
+          "duplicate_delivery_ratio": 0.1612789880534083,
+          "handoff_success_rate": 0.8295964125560538,
+          "handoff_timely_success_rate": 0.7473841554559043,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 4.8,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 37.1,
+              "from_context": "crowded",
+              "recovery_steps": 1,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 6.7,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.3333333333333333,
+          "stale_unique_ratio": 0.08538299367533381,
+          "unique_delivery_ratio": 0.8989260897030954
+        },
+        {
+          "alert_duplicate_rate": 0.9098671726755219,
+          "avg_latency": 2.196714346409857,
+          "backlog_peak": 24,
+          "delivery_ratio": 0.9547052460789616,
+          "drop_ratio": 0.04245538128718226,
+          "duplicate_delivery_ratio": 0.1571615863651262,
+          "handoff_success_rate": 0.9671150971599403,
+          "handoff_timely_success_rate": 0.9671150971599403,
+          "p95_latency": 4.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 17.6,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.0,
+          "stale_unique_ratio": 0.032940019665683384,
+          "unique_delivery_ratio": 0.9636765634870499
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_11.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9246073298429319,
+          "avg_latency": 2.670051554444618,
+          "backlog_peak": 524,
+          "delivery_ratio": 0.8844825203813735,
+          "drop_ratio": 0.043111786651927594,
+          "duplicate_delivery_ratio": 0.16002174700978616,
+          "handoff_success_rate": 0.8253731343283582,
+          "handoff_timely_success_rate": 0.7477611940298508,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 4.7,
+              "from_context": "normal",
+              "recovery_steps": 78,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 10.6,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 2.8,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 39.0,
+          "stale_unique_ratio": 0.08118883653497644,
+          "unique_delivery_ratio": 0.8889962945062027
+        },
+        {
+          "alert_duplicate_rate": 0.9176470588235294,
+          "avg_latency": 2.124945644296275,
+          "backlog_peak": 33,
+          "delivery_ratio": 0.9532955644604117,
+          "drop_ratio": 0.04214453502832666,
+          "duplicate_delivery_ratio": 0.1569679691430488,
+          "handoff_success_rate": 0.9805970149253731,
+          "handoff_timely_success_rate": 0.9805970149253731,
+          "p95_latency": 3.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 3.7,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.0,
+          "stale_unique_ratio": 0.025490524903572027,
+          "unique_delivery_ratio": 0.9606895440631545
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_12.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9204431017119838,
+          "avg_latency": 2.7979067261813144,
+          "backlog_peak": 523,
+          "delivery_ratio": 0.8849087442113865,
+          "drop_ratio": 0.04385725960228821,
+          "duplicate_delivery_ratio": 0.16371126634425937,
+          "handoff_success_rate": 0.8259541984732824,
+          "handoff_timely_success_rate": 0.7557251908396947,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 4.1,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 23.0,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 3.9,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.0,
+          "stale_unique_ratio": 0.09063227655382411,
+          "unique_delivery_ratio": 0.8902886302025196
+        },
+        {
+          "alert_duplicate_rate": 0.9201127819548872,
+          "avg_latency": 2.355246160470791,
+          "backlog_peak": 51,
+          "delivery_ratio": 0.9489239989103786,
+          "drop_ratio": 0.04862435303731953,
+          "duplicate_delivery_ratio": 0.1634936539746159,
+          "handoff_success_rate": 0.9587786259541985,
+          "handoff_timely_success_rate": 0.9587786259541985,
+          "p95_latency": 5.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 14.3,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.0,
+          "stale_unique_ratio": 0.050100200400801605,
+          "unique_delivery_ratio": 0.954871631318769
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_2.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9260355029585798,
+          "avg_latency": 2.6742944317315027,
+          "backlog_peak": 441,
+          "delivery_ratio": 0.9020228429888537,
+          "drop_ratio": 0.03729186734553461,
+          "duplicate_delivery_ratio": 0.1672008547008547,
+          "handoff_success_rate": 0.8680124223602484,
+          "handoff_timely_success_rate": 0.7841614906832298,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 4.4,
+              "from_context": "normal",
+              "recovery_steps": 84,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 15.9,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.9,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 42.0,
+          "stale_unique_ratio": 0.08547008547008547,
+          "unique_delivery_ratio": 0.907563025210084
+        },
+        {
+          "alert_duplicate_rate": 0.9253731343283582,
+          "avg_latency": 2.1126397248495272,
+          "backlog_peak": 26,
+          "delivery_ratio": 0.960231182055869,
+          "drop_ratio": 0.0361910004128251,
+          "duplicate_delivery_ratio": 0.1657200133645172,
+          "handoff_success_rate": 0.9611801242236024,
+          "handoff_timely_success_rate": 0.9611801242236024,
+          "p95_latency": 3.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 4.8,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.0,
+          "stale_unique_ratio": 0.02622786501837621,
+          "unique_delivery_ratio": 0.9673561732385262
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_3.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.918834547346514,
+          "avg_latency": 2.7347792408985283,
+          "backlog_peak": 491,
+          "delivery_ratio": 0.8904676507104429,
+          "drop_ratio": 0.04179886880949096,
+          "duplicate_delivery_ratio": 0.15847092605886576,
+          "handoff_success_rate": 0.8357988165680473,
+          "handoff_timely_success_rate": 0.7603550295857988,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 5.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 10.3,
+              "from_context": "crowded",
+              "recovery_steps": 2,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 5.1,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.0,
+          "stale_unique_ratio": 0.08524766690595836,
+          "unique_delivery_ratio": 0.896252211677658
+        },
+        {
+          "alert_duplicate_rate": 0.9239766081871345,
+          "avg_latency": 2.3145872488072863,
+          "backlog_peak": 28,
+          "delivery_ratio": 0.9542005793902607,
+          "drop_ratio": 0.042626569181956134,
+          "duplicate_delivery_ratio": 0.15882057296029486,
+          "handoff_success_rate": 0.9659763313609467,
+          "handoff_timely_success_rate": 0.9659763313609467,
+          "p95_latency": 4.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 5.2,
+              "from_context": "crowded",
+              "recovery_steps": 3,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.0,
+          "stale_unique_ratio": 0.041883062489529235,
+          "unique_delivery_ratio": 0.9601093775132701
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_4.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9187314172447968,
+          "avg_latency": 2.7008740204942736,
+          "backlog_peak": 502,
+          "delivery_ratio": 0.8920553837881435,
+          "drop_ratio": 0.04046242774566474,
+          "duplicate_delivery_ratio": 0.162375197057278,
+          "handoff_success_rate": 0.8338192419825073,
+          "handoff_timely_success_rate": 0.7478134110787172,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 5.3,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 10.7,
+              "from_context": "crowded",
+              "recovery_steps": 3,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 3.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.5,
+          "stale_unique_ratio": 0.08565423016290068,
+          "unique_delivery_ratio": 0.8979238754325259
+        },
+        {
+          "alert_duplicate_rate": 0.922429906542056,
+          "avg_latency": 2.1652100366506906,
+          "backlog_peak": 29,
+          "delivery_ratio": 0.9536227987632746,
+          "drop_ratio": 0.04247882779943541,
+          "duplicate_delivery_ratio": 0.16161781562141805,
+          "handoff_success_rate": 0.9548104956268222,
+          "handoff_timely_success_rate": 0.9548104956268222,
+          "p95_latency": 4.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 2.3,
+              "from_context": "crowded",
+              "recovery_steps": 3,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.0,
+          "stale_unique_ratio": 0.029801866710332404,
+          "unique_delivery_ratio": 0.9605221767851526
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_5.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9167446211412535,
+          "avg_latency": 2.7164721927564783,
+          "backlog_peak": 495,
+          "delivery_ratio": 0.8910342965163381,
+          "drop_ratio": 0.04212800432082096,
+          "duplicate_delivery_ratio": 0.17440825769709914,
+          "handoff_success_rate": 0.8473282442748091,
+          "handoff_timely_success_rate": 0.7633587786259542,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 3.9,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 24.0,
+              "from_context": "crowded",
+              "recovery_steps": 4,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 2.2,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 2.0,
+          "stale_unique_ratio": 0.08311087382096459,
+          "unique_delivery_ratio": 0.8966012446146482
+        },
+        {
+          "alert_duplicate_rate": 0.9265486725663716,
+          "avg_latency": 2.2070185368614688,
+          "backlog_peak": 31,
+          "delivery_ratio": 0.9542263029975695,
+          "drop_ratio": 0.04158790170132325,
+          "duplicate_delivery_ratio": 0.1739202657807309,
+          "handoff_success_rate": 0.9648854961832061,
+          "handoff_timely_success_rate": 0.9648854961832061,
+          "p95_latency": 4.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 12.7,
+              "from_context": "crowded",
+              "recovery_steps": 4,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.3333333333333333,
+          "stale_unique_ratio": 0.033056478405315615,
+          "unique_delivery_ratio": 0.9605872028083613
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_6.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9308712121212122,
+          "avg_latency": 2.785974499089253,
+          "backlog_peak": 525,
+          "delivery_ratio": 0.8879902951880307,
+          "drop_ratio": 0.041245450869389404,
+          "duplicate_delivery_ratio": 0.1753791257805531,
+          "handoff_success_rate": 0.8411949685534591,
+          "handoff_timely_success_rate": 0.7437106918238994,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 6.8,
+              "from_context": "normal",
+              "recovery_steps": 1,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 15.2,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 6.4,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.5,
+          "stale_unique_ratio": 0.08117752007136485,
+          "unique_delivery_ratio": 0.89265806657111
+        },
+        {
+          "alert_duplicate_rate": 0.9215167548500882,
+          "avg_latency": 2.185299915516756,
+          "backlog_peak": 29,
+          "delivery_ratio": 0.9572718695241946,
+          "drop_ratio": 0.03962798220784472,
+          "duplicate_delivery_ratio": 0.1725276539541027,
+          "handoff_success_rate": 0.9732704402515723,
+          "handoff_timely_success_rate": 0.9732704402515723,
+          "p95_latency": 4.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 5.2,
+              "from_context": "crowded",
+              "recovery_steps": 1,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.1,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.3333333333333333,
+          "stale_unique_ratio": 0.029387485553904573,
+          "unique_delivery_ratio": 0.9646440516005733
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_7.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9187380497131931,
+          "avg_latency": 2.6089597570235386,
+          "backlog_peak": 509,
+          "delivery_ratio": 0.8877055810191427,
+          "drop_ratio": 0.04367754111620383,
+          "duplicate_delivery_ratio": 0.17087482219061167,
+          "handoff_success_rate": 0.8239644970414202,
+          "handoff_timely_success_rate": 0.7189349112426036,
+          "p95_latency": 4.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 5.3,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 15.6,
+              "from_context": "crowded",
+              "recovery_steps": 1,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 4.2,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.5,
+          "stale_unique_ratio": 0.08250355618776671,
+          "unique_delivery_ratio": 0.89340746624305
+        },
+        {
+          "alert_duplicate_rate": 0.9279279279279279,
+          "avg_latency": 2.1199605300253737,
+          "backlog_peak": 23,
+          "delivery_ratio": 0.9563224588837962,
+          "drop_ratio": 0.0415206255055271,
+          "duplicate_delivery_ratio": 0.16985488126649076,
+          "handoff_success_rate": 0.9615384615384616,
+          "handoff_timely_success_rate": 0.9615384615384616,
+          "p95_latency": 3.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 6.4,
+              "from_context": "crowded",
+              "recovery_steps": 0,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.3,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.0,
+          "stale_unique_ratio": 0.024406332453825858,
+          "unique_delivery_ratio": 0.9633042096902303
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_8.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9127962085308057,
+          "avg_latency": 2.971514242878561,
+          "backlog_peak": 535,
+          "delivery_ratio": 0.8898078975453575,
+          "drop_ratio": 0.03882070437566702,
+          "duplicate_delivery_ratio": 0.16874014368319606,
+          "handoff_success_rate": 0.8455056179775281,
+          "handoff_timely_success_rate": 0.7584269662921348,
+          "p95_latency": 6.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 4.5,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 31.0,
+              "from_context": "crowded",
+              "recovery_steps": 3,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 3.5,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.5,
+          "stale_unique_ratio": 0.09847555633432627,
+          "unique_delivery_ratio": 0.8967630421118793
+        },
+        {
+          "alert_duplicate_rate": 0.9079646017699115,
+          "avg_latency": 2.4499651081646894,
+          "backlog_peak": 52,
+          "delivery_ratio": 0.9558431163287087,
+          "drop_ratio": 0.041488794023479186,
+          "duplicate_delivery_ratio": 0.16712819677471902,
+          "handoff_success_rate": 0.9747191011235955,
+          "handoff_timely_success_rate": 0.9747191011235955,
+          "p95_latency": 5.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 19.4,
+              "from_context": "crowded",
+              "recovery_steps": 5,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.1,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 1.6666666666666667,
+          "stale_unique_ratio": 0.05717543573871966,
+          "unique_delivery_ratio": 0.9646448774355751
+        }
+      ]
+    },
+    {
+      "file": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_9.json",
+      "rows": [
+        {
+          "alert_duplicate_rate": 0.9059500959692899,
+          "avg_latency": 2.8141133343516116,
+          "backlog_peak": 509,
+          "delivery_ratio": 0.8868870224871308,
+          "drop_ratio": 0.04416147385532376,
+          "duplicate_delivery_ratio": 0.1684811708013564,
+          "handoff_success_rate": 0.8398203592814372,
+          "handoff_timely_success_rate": 0.7529940119760479,
+          "p95_latency": 5.0,
+          "policy": "backpressure",
+          "recovery_events": [
+            {
+              "baseline_backlog": 4.9,
+              "from_context": "normal",
+              "recovery_steps": 19,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 41.7,
+              "from_context": "crowded",
+              "recovery_steps": 1,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 4.6,
+              "from_context": "uplink_loss",
+              "recovery_steps": null,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 10.0,
+          "stale_unique_ratio": 0.09352132786007496,
+          "unique_delivery_ratio": 0.8953339725151805
+        },
+        {
+          "alert_duplicate_rate": 0.9149507609668756,
+          "avg_latency": 2.2890469416785204,
+          "backlog_peak": 50,
+          "delivery_ratio": 0.9523164454077486,
+          "drop_ratio": 0.044296938499051745,
+          "duplicate_delivery_ratio": 0.17010652463382156,
+          "handoff_success_rate": 0.9640718562874252,
+          "handoff_timely_success_rate": 0.9640718562874252,
+          "p95_latency": 4.0,
+          "policy": "min_cost_lp",
+          "recovery_events": [
+            {
+              "baseline_backlog": 0.0,
+              "from_context": "normal",
+              "recovery_steps": 0,
+              "switch_step": 80,
+              "to_context": "crowded"
+            },
+            {
+              "baseline_backlog": 20.2,
+              "from_context": "crowded",
+              "recovery_steps": 1,
+              "switch_step": 160,
+              "to_context": "uplink_loss"
+            },
+            {
+              "baseline_backlog": 0.2,
+              "from_context": "uplink_loss",
+              "recovery_steps": 0,
+              "switch_step": 240,
+              "to_context": "cam2_failure"
+            }
+          ],
+          "recovery_steps_avg": 0.3333333333333333,
+          "stale_unique_ratio": 0.043941411451398134,
+          "unique_delivery_ratio": 0.9600511345477788
+        }
+      ]
+    }
+  ],
+  "ranking": {
+    "ranking": [
+      {
+        "metric_contributions": {
+          "alert_duplicate_rate": {
+            "normalized_score": 1.0,
+            "raw_value": 0.9194401139156018,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          },
+          "avg_latency": {
+            "normalized_score": 1.0,
+            "raw_value": 2.251476257873488,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          },
+          "backlog_peak": {
+            "normalized_score": 1.0,
+            "raw_value": 36.0,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          },
+          "delivery_ratio": {
+            "normalized_score": 1.0,
+            "raw_value": 0.95493876202154,
+            "weight": 2.0,
+            "weighted_contribution": 2.0
+          },
+          "drop_ratio": {
+            "normalized_score": 0.0,
+            "raw_value": 0.04196153718188383,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          },
+          "duplicate_delivery_ratio": {
+            "normalized_score": 1.0,
+            "raw_value": 0.1660994668849611,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          },
+          "handoff_success_rate": {
+            "normalized_score": 1.0,
+            "raw_value": 0.9666357443619827,
+            "weight": 2.0,
+            "weighted_contribution": 2.0
+          },
+          "handoff_timely_success_rate": {
+            "normalized_score": 1.0,
+            "raw_value": 0.9666357443619827,
+            "weight": 3.0,
+            "weighted_contribution": 3.0
+          },
+          "p95_latency": {
+            "normalized_score": 1.0,
+            "raw_value": 4.0,
+            "weight": 2.0,
+            "weighted_contribution": 2.0
+          },
+          "recovery_steps_avg": {
+            "normalized_score": 1.0,
+            "raw_value": 0.6388888888888888,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          },
+          "stale_unique_ratio": {
+            "normalized_score": 1.0,
+            "raw_value": 0.03812526639040732,
+            "weight": 2.0,
+            "weighted_contribution": 2.0
+          },
+          "unique_delivery_ratio": {
+            "normalized_score": 1.0,
+            "raw_value": 0.9622980637867777,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          }
+        },
+        "policy": "min_cost_lp",
+        "score": 0.9444444444444444,
+        "score_denominator": 18.0,
+        "score_numerator": 17.0
+      },
+      {
+        "metric_contributions": {
+          "alert_duplicate_rate": {
+            "normalized_score": 0.0,
+            "raw_value": 0.921431383777019,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          },
+          "avg_latency": {
+            "normalized_score": 0.0,
+            "raw_value": 2.7767964515058168,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          },
+          "backlog_peak": {
+            "normalized_score": 0.0,
+            "raw_value": 505.25,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          },
+          "delivery_ratio": {
+            "normalized_score": 0.0,
+            "raw_value": 0.8904877882919905,
+            "weight": 2.0,
+            "weighted_contribution": 0.0
+          },
+          "drop_ratio": {
+            "normalized_score": 1.0,
+            "raw_value": 0.04105488878347697,
+            "weight": 1.0,
+            "weighted_contribution": 1.0
+          },
+          "duplicate_delivery_ratio": {
+            "normalized_score": 0.0,
+            "raw_value": 0.16753318018661903,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          },
+          "handoff_success_rate": {
+            "normalized_score": 0.0,
+            "raw_value": 0.8407418380031264,
+            "weight": 2.0,
+            "weighted_contribution": 0.0
+          },
+          "handoff_timely_success_rate": {
+            "normalized_score": 0.0,
+            "raw_value": 0.7542908982102552,
+            "weight": 3.0,
+            "weighted_contribution": 0.0
+          },
+          "p95_latency": {
+            "normalized_score": 0.0,
+            "raw_value": 5.166666666666667,
+            "weight": 2.0,
+            "weighted_contribution": 0.0
+          },
+          "recovery_steps_avg": {
+            "normalized_score": 0.0,
+            "raw_value": 8.277777777777779,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          },
+          "stale_unique_ratio": {
+            "normalized_score": 0.0,
+            "raw_value": 0.08891890898118666,
+            "weight": 2.0,
+            "weighted_contribution": 0.0
+          },
+          "unique_delivery_ratio": {
+            "normalized_score": 0.0,
+            "raw_value": 0.8962472369355647,
+            "weight": 1.0,
+            "weighted_contribution": 0.0
+          }
+        },
+        "policy": "backpressure",
+        "score": 0.05555555555555555,
+        "score_denominator": 18.0,
+        "score_numerator": 1.0
+      }
+    ],
+    "weights": {
+      "alert_duplicate_rate": 1.0,
+      "avg_latency": 1.0,
+      "backlog_peak": 1.0,
+      "delivery_ratio": 2.0,
+      "drop_ratio": 1.0,
+      "duplicate_delivery_ratio": 1.0,
+      "handoff_success_rate": 2.0,
+      "handoff_timely_success_rate": 3.0,
+      "p95_latency": 2.0,
+      "recovery_steps_avg": 1.0,
+      "stale_unique_ratio": 2.0,
+      "unique_delivery_ratio": 1.0
+    }
+  },
+  "summary": {
+    "files": [
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_1.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_10.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_11.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_12.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_2.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_3.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_4.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_5.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_6.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_7.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_8.json",
+      "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/network_message_passing/monte_carlo/run_9.json"
+    ],
+    "num_files": 12,
+    "policies": {
+      "backpressure": {
+        "alert_duplicate_rate": {
+          "mean": 0.921431383777019,
+          "std": 0.007613091081884197
+        },
+        "avg_latency": {
+          "mean": 2.7767964515058168,
+          "std": 0.13815933862717647
+        },
+        "backlog_peak": {
+          "mean": 505.25,
+          "std": 23.234762031634123
+        },
+        "delivery_ratio": {
+          "mean": 0.8904877882919905,
+          "std": 0.00464749559149021
+        },
+        "drop_ratio": {
+          "mean": 0.04105488878347697,
+          "std": 0.002398454072942635
+        },
+        "duplicate_delivery_ratio": {
+          "mean": 0.16753318018661903,
+          "std": 0.006347416913279219
+        },
+        "handoff_success_rate": {
+          "mean": 0.8407418380031264,
+          "std": 0.015150607834609486
+        },
+        "handoff_timely_success_rate": {
+          "mean": 0.7542908982102552,
+          "std": 0.015278204111942794
+        },
+        "p95_latency": {
+          "mean": 5.166666666666667,
+          "std": 0.6871842709362768
+        },
+        "recovery_steps_avg": {
+          "mean": 8.277777777777779,
+          "std": 14.64539703527998
+        },
+        "stale_unique_ratio": {
+          "mean": 0.08891890898118666,
+          "std": 0.009225235729342555
+        },
+        "unique_delivery_ratio": {
+          "mean": 0.8962472369355647,
+          "std": 0.004693373167897079
+        }
+      },
+      "min_cost_lp": {
+        "alert_duplicate_rate": {
+          "mean": 0.9194401139156018,
+          "std": 0.006183139848491785
+        },
+        "avg_latency": {
+          "mean": 2.251476257873488,
+          "std": 0.12425132504265783
+        },
+        "backlog_peak": {
+          "mean": 36.0,
+          "std": 11.853269591129697
+        },
+        "delivery_ratio": {
+          "mean": 0.95493876202154,
+          "std": 0.0028301040271373956
+        },
+        "drop_ratio": {
+          "mean": 0.04196153718188383,
+          "std": 0.002773170011565129
+        },
+        "duplicate_delivery_ratio": {
+          "mean": 0.1660994668849611,
+          "std": 0.006275128023264131
+        },
+        "handoff_success_rate": {
+          "mean": 0.9666357443619827,
+          "std": 0.00712097577758186
+        },
+        "handoff_timely_success_rate": {
+          "mean": 0.9666357443619827,
+          "std": 0.00712097577758186
+        },
+        "p95_latency": {
+          "mean": 4.0,
+          "std": 0.7071067811865476
+        },
+        "recovery_steps_avg": {
+          "mean": 0.6388888888888888,
+          "std": 0.699977953797453
+        },
+        "stale_unique_ratio": {
+          "mean": 0.03812526639040732,
+          "std": 0.012467361426075158
+        },
+        "unique_delivery_ratio": {
+          "mean": 0.9622980637867777,
+          "std": 0.0033716552593066663
+        }
+      }
+    }
+  }
+}
