@@ -36,6 +36,7 @@ We address this by integrating contextual event inference and network coordinati
 \begin{enumerate}[leftmargin=1.5em]
   \item Dynamic event inference stack with taxonomy routing, configurable observation classifier fusion, context-conditional Markov filtering, and entity lifecycle tracking.
   \item Online runtime diagnostics with live transition/posterior visualization, interactive context switching, and entity trajectory timelines.
+  \item Entity observation modes: schedule-driven per-window inputs and optional motion-blob \texttt{auto\_motion} heuristic.
   \item Network message-passing simulator with two policies: receding-horizon min-cost LP and backpressure.
   \item Surveillance-specific coordination KPIs (handoff success, stale ratio, duplicate alerts, recovery behavior).
   \item Direction-aware weighted policy ranking for deployment-specific optimization targets.
@@ -74,6 +75,7 @@ The implementation supports:
 
 \subsection{Entity sequence and lifecycle tracking}
 Per-window entity observations update per-entity event sequences and Markov histories. The runtime exports lifecycle sets (\texttt{entered\_entities}, \texttt{reentered\_entities}, \texttt{exited\_entities}) together with active/inactive entity sets, and visualizes these states as timeline trajectories in the live dashboard.
+When schedule input is unavailable, an optional \texttt{auto\_motion} mode can generate entity observations from foreground motion blobs.
 
 \subsection{Network message passing model}
 We model a directed graph $G=(V,E)$ with time-varying edge capacities $C_e(t)$, delays $d_e$, and losses $p_e(t)$. Traffic commodities include source/destination/rate and surveillance metadata (\texttt{kind}, \texttt{ttl\_steps}, \texttt{copies}).
@@ -143,7 +145,7 @@ In representative synthetic surveillance runs with provided defaults, min-cost L
   \item Packet-level simulator is synthetic and does not yet replay real telemetry traces.
   \item Min-cost LP is one-step receding-horizon optimization, not full finite-horizon global control.
   \item The current framework does not jointly optimize model compute scheduling and network routing.
-  \item Entity lifecycle currently depends on provided per-window \texttt{entity\_observations}; automatic detector/tracker/re-identification from raw video is not integrated in this module.
+  \item \texttt{auto\_motion} is a heuristic foreground-blob tracker and is not equivalent to full detector/tracker/re-identification quality.
 \end{enumerate}
 
 \section{Conclusion}

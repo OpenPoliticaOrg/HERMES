@@ -436,6 +436,7 @@ pre code {
 <li>context-conditional Markov updates (<code>window_size</code>, <code>markov_order</code>)</li>
 <li>optional symbolic transfer entropy diagnostics</li>
 <li>entity-centric sequence + lifecycle outputs (<code>entered/reentered/exited</code>)</li>
+<li>entity observation modes: <code>schedule</code> and heuristic <code>auto_motion</code></li>
 </ul>
 <h2 id="coordination-stack">Coordination stack</h2>
 <ul>
@@ -2151,8 +2152,8 @@ pre code {
 <li>Simulator is synthetic packet-level coordination, not full telemetry replay.</li>
 <li>LP policy is receding-horizon one-step optimization.</li>
 <li>Joint compute scheduling + routing optimization is not yet integrated.</li>
-<li>Entity lifecycle depends on provided <code>entity_observations_by_window</code>; automatic<br />
-detector/tracker/re-identification from raw video is not integrated yet.</li>
+<li><code>auto_motion</code> exists for raw video but is heuristic blob tracking, not full<br />
+detector/tracker/re-identification quality.</li>
 </ul>
 <p>Next work:</p>
 <ol>

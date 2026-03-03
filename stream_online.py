@@ -24,6 +24,7 @@ import torch
 
 import lavis.tasks as tasks
 from lavis.common.config import Config
+from lavis.common.entity_observation_adapter import MotionEntityObservationAdapter
 from lavis.datasets.data_utils import prepare_sample
 
 # imports modules for registration
@@ -505,6 +506,8 @@ class LiveMarkovVisualizer:
             f"Context: {result.get(self.context_field)}",
             f"Context Mode: {result.get('context_mode', '-')}",
             f"Context Source: {result.get('context_source', '-')}",
+            f"Entity Obs Mode: {result.get('entity_observation_mode', '-')}",
+            f"Entity Obs Source: {result.get('entity_observation_source', '-')}",
             f"Top Class: {class_labels[0] if class_labels else '-'}",
             f"Top State: {result.get('markov_state', {}).get('event_id', '-')}",
             f"Transition Mode: {debug.get('transition_mode', '-')}",
@@ -612,6 +615,40 @@ def parse_args():
             "Optional JSON file mapping window index to entity observations. "
             "Each entry may be a list of entity dicts or {\"entities\": [...]}."
         ),
+    )
+    parser.add_argument(
+        "--entity-observation-mode",
+        choices=["none", "schedule", "auto_motion"],
+        default="none",
+        help=(
+            "Entity observation source mode. "
+            "`schedule` uses --entity-observations-by-window; "
+            "`auto_motion` extracts moving blobs from video windows."
+        ),
+    )
+    parser.add_argument(
+        "--entity-motion-min-area",
+        type=int,
+        default=500,
+        help="Minimum contour area (px) for auto-motion entities.",
+    )
+    parser.add_argument(
+        "--entity-motion-iou-threshold",
+        type=float,
+        default=0.25,
+        help="IoU threshold for auto-motion track association.",
+    )
+    parser.add_argument(
+        "--entity-motion-max-tracks",
+        type=int,
+        default=12,
+        help="Maximum active auto-motion tracks.",
+    )
+    parser.add_argument(
+        "--entity-motion-max-missed",
+        type=int,
+        default=3,
+        help="Maximum missed windows before auto-motion track removal.",
     )
     parser.add_argument(
         "--context-options",
@@ -853,6 +890,39 @@ def _build_context_options(args, cfg, context_schedule):
     return _unique_labels(options)
 
 
+def _safe_int(value):
+    try:
+        out = int(value)
+    except Exception:
+        return None
+    if out <= 0:
+        return None
+    return out
+
+
+def _resolve_num_model_frames(cfg, dataset_name, default_value=8):
+    dataset_cfg = cfg.datasets_cfg[dataset_name]
+    candidates = [
+        cfg.model_cfg.get("num_frames", None),
+        cfg.model_cfg.get("num_frms", None),
+        dataset_cfg.get("num_frames", None),
+        dataset_cfg.get("num_frms", None),
+    ]
+    for value in candidates:
+        parsed = _safe_int(value)
+        if parsed is not None:
+            dataset_cfg["num_frames"] = int(parsed)
+            return int(parsed)
+
+    fallback = int(default_value)
+    logging.warning(
+        "Could not infer num_frames from model/dataset config. "
+        f"Falling back to {fallback} frames."
+    )
+    dataset_cfg["num_frames"] = fallback
+    return fallback
+
+
 def main():
     try:
         import cv2
@@ -866,7 +936,7 @@ def main():
 
     cfg = Config(args)
     dataset_name = list(cfg.datasets_cfg.keys())[0]
-    cfg.datasets_cfg[dataset_name]["num_frames"] = cfg.model_cfg.num_frames
+    num_model_frames = _resolve_num_model_frames(cfg, dataset_name)
     if not str(cfg.model_cfg.arch).endswith("_hermes"):
         cfg.model_cfg.arch += "_hermes"
 
@@ -935,9 +1005,8 @@ def main():
 
     chunk_frames = max(1, int(round(args.chunk_seconds * fps)))
     stride_frames = max(1, int(round(args.stride_seconds * fps)))
-    num_model_frames = int(cfg.model_cfg.num_frames)
-
     frame_buffer = deque(maxlen=chunk_frames)
+    frame_buffer_bgr = deque(maxlen=chunk_frames)
     frame_idx = 0
     next_infer_frame = chunk_frames
     window_idx = 0
@@ -945,6 +1014,28 @@ def main():
     entity_observation_schedule = _load_entity_observation_schedule(
         args.entity_observations_by_window
     )
+    entity_observation_mode = str(args.entity_observation_mode)
+    if (
+        entity_observation_mode == "none"
+        and args.entity_observations_by_window
+        and len(entity_observation_schedule) > 0
+    ):
+        entity_observation_mode = "schedule"
+    if entity_observation_mode == "schedule" and len(entity_observation_schedule) == 0:
+        logging.warning(
+            "Entity observation mode `schedule` requested but no schedule payload was loaded. "
+            "Falling back to mode `none`."
+        )
+        entity_observation_mode = "none"
+    motion_adapter = None
+    if entity_observation_mode == "auto_motion":
+        motion_adapter = MotionEntityObservationAdapter(
+            min_area=args.entity_motion_min_area,
+            iou_threshold=args.entity_motion_iou_threshold,
+            max_tracks=args.entity_motion_max_tracks,
+            max_missed=args.entity_motion_max_missed,
+        )
+
     context_options = _build_context_options(args, cfg, context_schedule)
     use_interactive_context = bool(args.interactive_context and args.visualize == "matplotlib")
     if args.interactive_context and args.visualize != "matplotlib":
@@ -984,6 +1075,7 @@ def main():
                 break
             frame_idx += 1
             frame_buffer.append(_frame_to_tensor(frame_bgr, cv2))
+            frame_buffer_bgr.append(frame_bgr.copy())
 
             if len(frame_buffer) < chunk_frames:
                 continue
@@ -1018,11 +1110,19 @@ def main():
             }
             if ecological_context is not None:
                 sample[args.context_field] = [ecological_context]
-            entity_observations = _resolve_entity_observations(
-                entity_observation_schedule,
-                window_idx,
-                default_empty=(len(entity_observation_schedule) > 0),
-            )
+            entity_observations = None
+            if entity_observation_mode == "schedule":
+                entity_observations = _resolve_entity_observations(
+                    entity_observation_schedule,
+                    window_idx,
+                    default_empty=True,
+                )
+            elif entity_observation_mode == "auto_motion":
+                entity_observations = motion_adapter.observe_window(
+                    window_frames_bgr=list(frame_buffer_bgr),
+                    window_idx=window_idx,
+                    cv2_module=cv2,
+                )
             if entity_observations is not None:
                 # Batch shape [B], each item is a per-window entity list.
                 sample["entity_observations"] = [entity_observations]
@@ -1054,11 +1154,18 @@ def main():
                 if context_controller is not None
                 else list(context_options)
             )
+            result["entity_observation_mode"] = entity_observation_mode
             if entity_observations is not None:
-                if len(entity_observations) > 0:
-                    result["entity_observation_source"] = "window_schedule"
-                else:
-                    result["entity_observation_source"] = "window_schedule_empty"
+                if entity_observation_mode == "schedule":
+                    if len(entity_observations) > 0:
+                        result["entity_observation_source"] = "window_schedule"
+                    else:
+                        result["entity_observation_source"] = "window_schedule_empty"
+                elif entity_observation_mode == "auto_motion":
+                    if len(entity_observations) > 0:
+                        result["entity_observation_source"] = "auto_motion"
+                    else:
+                        result["entity_observation_source"] = "auto_motion_empty"
 
             line = json.dumps(result)
             print(line, flush=True)

@@ -16,6 +16,7 @@ TE_TARGET_ORDER="${10:-0}"
 TE_SOURCE_ORDER="${11:-0}"
 ENTITY_OBS_BY_WINDOW="${12:-}"
 ENTITY_MISSING_TOL="${13:-0}"
+ENTITY_OBS_MODE="${14:-none}"
 
 mkdir -p "${ROOT_DIR}/logs"
 
@@ -76,6 +77,10 @@ fi
 
 if [[ "${ENTITY_MISSING_TOL}" -ge 0 ]]; then
   CMD+=(--entity-missing-tolerance "${ENTITY_MISSING_TOL}")
+fi
+
+if [[ "${ENTITY_OBS_MODE}" != "none" ]]; then
+  CMD+=(--entity-observation-mode "${ENTITY_OBS_MODE}")
 fi
 
 "${CMD[@]}"

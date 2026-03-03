@@ -73,6 +73,7 @@ Main files:
 - Entity-centric online event sequences (`entity_event_sequences`) with per-entity Markov state/history updates
 - Entity lifecycle tracking (`entity_lifecycle`) for enter/exit/re-entry and active-set state
 - Live entity trajectory strip in visualization (entered/reentered/active/exited/inactive)
+- Optional motion-blob automatic entity observation mode (`auto_motion`)
 
 ### 3.3 Core configs
 
@@ -136,6 +137,10 @@ bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/context_markov
 
 When entity schedule input is enabled, unlisted windows are treated as no
 entities observed so exits are surfaced in `entity_lifecycle`.
+
+Alternative auto mode:
+- `stream_online.py --entity-observation-mode auto_motion` generates
+  per-window entity observations from motion blobs (heuristic tracking).
 
 ## 5) Network message passing extension architecture
 
@@ -219,9 +224,9 @@ Default outputs:
 - `min_cost_lp` is one-step receding-horizon optimization, not full finite-horizon optimal control.
 - Simulator is packet-level and synthetic; it does not include full vision-model compute scheduling or GPU contention.
 - KPI semantics depend on config assumptions (TTL/copies/context stress patterns).
-- Entity lifecycle/sequence tracking currently consumes provided per-window
-  `entity_observations`; automatic detection/re-identification from raw video
-  is not integrated in this module yet.
+- Highest-quality lifecycle/sequence tracking uses provided per-window
+  `entity_observations`. `auto_motion` is available for raw video but is a
+  heuristic blob tracker, not full detector/re-identification.
 
 ## 10) Suggested next engineering milestones
 

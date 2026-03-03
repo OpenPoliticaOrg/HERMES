@@ -144,7 +144,7 @@ class ClassificationTask(BaseTask):
         max_len = run_cfg.max_len
         min_len = run_cfg.min_len
         evaluate = run_cfg.evaluate
-        log_dir = run_cfg.log_dir
+        log_dir = run_cfg.get("log_dir", None)
         classification_mode = run_cfg.get("classification_mode", "generate")
         event_taxonomy_path = run_cfg.get("event_taxonomy_path", None)
         classifier_prompt = run_cfg.get("classifier_prompt", "{}")

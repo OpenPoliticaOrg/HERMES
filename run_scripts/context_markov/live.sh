@@ -11,6 +11,7 @@ OUTPUT_JSONL="${5:-${ROOT_DIR}/logs/context_markov_live.jsonl}"
 CHECKPOINT_PATH="${6:-}"
 ENTITY_OBS_BY_WINDOW="${7:-}"
 ENTITY_MISSING_TOL="${8:-0}"
+ENTITY_OBS_MODE="${9:-none}"
 
 mkdir -p "${ROOT_DIR}/logs"
 
@@ -43,6 +44,10 @@ fi
 
 if [[ "${ENTITY_MISSING_TOL}" -ge 0 ]]; then
   CMD+=(--entity-missing-tolerance "${ENTITY_MISSING_TOL}")
+fi
+
+if [[ "${ENTITY_OBS_MODE}" != "none" ]]; then
+  CMD+=(--entity-observation-mode "${ENTITY_OBS_MODE}")
 fi
 
 "${CMD[@]}"

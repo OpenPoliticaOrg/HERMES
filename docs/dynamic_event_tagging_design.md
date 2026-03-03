@@ -33,11 +33,13 @@ Current implemented capabilities:
   `entered`, `reentered`, `exited`, and active/inactive sets.
 - Live visualization of class confidence, Markov posterior, transition matrix,
   and color-coded entity trajectories over windows.
+- Optional motion-blob-based automatic entity observation mode
+  (`--entity-observation-mode auto_motion`).
 
 Current constraint:
-- Entity lifecycle/sequence updates consume externally provided per-window
-  `entity_observations`; automatic detector/tracker/re-identification from
-  raw video frames is not included in this module.
+- Best quality entity lifecycle/sequence updates use externally provided
+  per-window `entity_observations`. `auto_motion` mode provides heuristic
+  blob tracking from raw video but is not full detector/re-identification.
 
 ## Remaining Gaps
 - Automatic entity detection/tracking/re-identification from raw video is not
@@ -271,6 +273,7 @@ python stream_online.py \
   --sequence-id cam0 \
   --ecological-context garage \
   --entity-observations-by-window data/taxonomy/example_entity_observations_by_window.json \
+  --entity-observation-mode schedule \
   --entity-missing-tolerance 0 \
   --context-field ecological_context \
   --ecological-context-by-window /path/to/context_schedule.json \
@@ -300,6 +303,9 @@ Each window outputs JSON with:
 
 If `--entity-observations-by-window` is provided, missing window indices are
 interpreted as no observed entities (`[]`) so exits are tracked online.
+
+`--entity-observation-mode auto_motion` can be used to emit entity observations
+from motion blobs when no schedule is provided.
 
 For one-command live visualization:
 ```bash

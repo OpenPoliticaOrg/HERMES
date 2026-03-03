@@ -28,11 +28,14 @@ Most existing pipelines optimize these components separately. We instead build a
    - live posterior/matrix visualization,
    - interactive ecological context switching during streaming,
    - entity trajectory timelines (entered/reentered/active/exited/inactive).
-3. **Network coordination simulator**:
+3. **Entity observation modes**:
+   - schedule-driven per-window entity observations,
+   - optional motion-blob `auto_motion` heuristic when schedule input is absent.
+4. **Network coordination simulator**:
    - min-cost LP and backpressure policies under context-conditioned link/traffic changes.
-4. **Surveillance-specific KPI layer**:
+5. **Surveillance-specific KPI layer**:
    - timely handoff success, stale-message rate, duplicate alert rate, recovery behavior.
-5. **Weighted policy ranking**:
+6. **Weighted policy ranking**:
    - direction-aware normalized scoring with customizable operational priorities.
 
 ## 2. Related Work
@@ -95,6 +98,8 @@ history. The runtime also emits lifecycle sets:
 - active/inactive entity sets
 
 These lifecycle outputs are visualized in a live trajectory strip across windows.
+When no schedule is provided, an optional `auto_motion` mode can generate
+entity observations from foreground motion blobs.
 
 ### 4.5 Network message passing model
 
@@ -220,9 +225,8 @@ Weighted ranking allows policy selection based on deployment priorities:
 1. Simulator is synthetic and packet-level.
 2. LP is one-step receding-horizon, not global finite-horizon optimization.
 3. No explicit compute-node scheduling or model inference latency coupling yet.
-4. Entity lifecycle currently depends on provided per-window
-   `entity_observations`; automatic detector/tracker/re-identification from raw
-   video is not integrated in this module.
+4. Automatic `auto_motion` entity mode is heuristic motion-blob tracking and is
+   not equivalent to full detector/tracker/re-identification quality.
 
 ## 9. Conclusion
 

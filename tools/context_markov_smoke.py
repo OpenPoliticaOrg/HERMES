@@ -297,6 +297,33 @@ def main():
     if "person_2" not in life2.get("reentered_entities", []):
         fail("Window lifecycle summary is missing reentered person_2.")
 
+    # 7) Missing-window tolerance check.
+    entity_tracker_tol = entity_seq_mod.EntityEventSequenceTracker(
+        markov_chain=None,
+        context_field="ecological_context",
+        history_limit=4,
+        default_entity_id="__scene__",
+        default_markov_topk=2,
+        default_observation_topk=2,
+        default_missing_tolerance=1,
+    )
+    entity_tracker_tol.begin_window("cam_tol", context={"ecological_context": "salon"})
+    entity_tracker_tol.update_entity(
+        base_sequence_id="cam_tol",
+        entity_id="person_x",
+        observation_scores={"coin:put_on_hair_extensions": 0.9},
+        context={"ecological_context": "salon"},
+    )
+    entity_tracker_tol.finalize_window("cam_tol")
+    entity_tracker_tol.begin_window("cam_tol", context={"ecological_context": "salon"})
+    life_tol_1 = entity_tracker_tol.finalize_window("cam_tol")
+    entity_tracker_tol.begin_window("cam_tol", context={"ecological_context": "salon"})
+    life_tol_2 = entity_tracker_tol.finalize_window("cam_tol")
+    if "person_x" in life_tol_1.get("exited_entities", []):
+        fail("Entity exited before missing-window tolerance was exceeded.")
+    if "person_x" not in life_tol_2.get("exited_entities", []):
+        fail("Entity did not exit after missing-window tolerance was exceeded.")
+
     result = {
         "status": "ok",
         "paths": {
@@ -315,6 +342,12 @@ def main():
             "entity_sequence_person_2_len": int(e4.get("sequence_length", 0)),
             "entity_lifecycle_window_1_exited": life1.get("exited_entities", []),
             "entity_lifecycle_window_2_reentered": life2.get("reentered_entities", []),
+            "entity_lifecycle_tolerance_window_1_exited": life_tol_1.get(
+                "exited_entities", []
+            ),
+            "entity_lifecycle_tolerance_window_2_exited": life_tol_2.get(
+                "exited_entities", []
+            ),
         },
     }
 

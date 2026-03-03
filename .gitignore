@@ -2,3 +2,5 @@
 output
 __pycache__/
 frames
+logs/
+tmp/

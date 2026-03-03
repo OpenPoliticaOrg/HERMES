@@ -9,9 +9,9 @@
 - Live dashboard with transition matrix and entity trajectory timeline.
 
 Current constraint:
-- Entity lifecycle/sequences are computed from provided
-  `entity_observations_by_window` input; automatic entity detection/tracking
-  from raw video frames is not part of this module yet.
+- Best quality entity lifecycle/sequences use provided
+  `entity_observations_by_window`. An `auto_motion` heuristic mode is available
+  for raw video, but it is motion-blob based (not full detector/re-id).
 
 ## 1) Fast smoke test (no model checkpoint required)
 ```bash
@@ -49,6 +49,7 @@ Arguments:
 6. `checkpoint_path` (optional)
 7. `entity_observations_by_window` (optional JSON schedule path)
 8. `entity_missing_tolerance` (default `0`, windows allowed missing before exit)
+9. `entity_observation_mode` (`none` | `schedule` | `auto_motion`)
 
 Example with file input and checkpoint:
 ```bash
@@ -66,7 +67,21 @@ bash run_scripts/context_markov/live.sh 0 salon \
   cam0 \
   logs/context_markov_entity.jsonl \
   "" \
-  data/taxonomy/example_entity_observations_by_window.json
+  data/taxonomy/example_entity_observations_by_window.json \
+  0 \
+  schedule
+```
+
+Example with automatic motion-based entity observations:
+```bash
+bash run_scripts/context_markov/live.sh /path/video.mp4 salon \
+  "what is the activity in the video?" \
+  cam_motion \
+  logs/context_markov_motion.jsonl \
+  "" \
+  "" \
+  0 \
+  auto_motion
 ```
 
 ## 2.5) Live stream with matrix/debug visualization
@@ -98,6 +113,9 @@ Optional `live_viz.sh` arg 12:
 
 Optional `live_viz.sh` arg 13:
 1. `entity_missing_tolerance` windows before marking entity exit
+
+Optional `live_viz.sh` arg 14:
+1. `entity_observation_mode` (`none` | `schedule` | `auto_motion`)
 
 Hotkeys (focus the matplotlib window first):
 - `[` or left arrow: previous context
@@ -169,3 +187,12 @@ When provided, each output window includes:
 Schedule behavior:
 - if the schedule file is supplied, windows not listed are treated as
   `[]` (no entities observed), enabling explicit exit detection.
+
+## 6) Example output artifact
+Latest smoke output artifact:
+- `docs/assets/context_markov/context_markov_smoke_latest.json`
+
+Generate/update:
+```bash
+python tools/context_markov_smoke.py --print-json > docs/assets/context_markov/context_markov_smoke_latest.json
+```

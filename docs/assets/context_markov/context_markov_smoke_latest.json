@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "entity_lifecycle_tolerance_window_1_exited": [],
+    "entity_lifecycle_tolerance_window_2_exited": [
+      "person_x"
+    ],
+    "entity_lifecycle_window_1_exited": [
+      "person_2"
+    ],
+    "entity_lifecycle_window_2_reentered": [
+      "person_2"
+    ],
+    "entity_sequence_person_1_len": 2,
+    "entity_sequence_person_2_len": 2,
+    "garage_post": {
+      "coin:change_car_tire": 0.6778242677824268,
+      "coin:put_on_hair_extensions": 0.3221757322175732
+    },
+    "observation_scores": {
+      "lvu:director:ron": 0.2,
+      "lvu:director:steven": 0.7749999999999999
+    },
+    "salon_post": {
+      "coin:change_car_tire": 0.1522556390977444,
+      "coin:put_on_hair_extensions": 0.8477443609022557
+    },
+    "switch_post": {
+      "coin:change_car_tire": 0.8605654329931219,
+      "coin:put_on_hair_extensions": 0.13943456700687806
+    },
+    "taxonomy_classifier_id": "lvu_director",
+    "te_bits": 0.0
+  },
+  "paths": {
+    "markov": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/data/taxonomy/example_markov_chain.json",
+    "observation": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/data/taxonomy/example_observation_classifiers.json",
+    "taxonomy": "/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/data/taxonomy/example_event_taxonomy.json"
+  },
+  "status": "ok"
+}

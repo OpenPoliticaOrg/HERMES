@@ -111,6 +111,7 @@ Distributed surveillance has to optimize two loops at the same time:
 - context-conditional Markov updates (`window_size`, `markov_order`)
 - optional symbolic transfer entropy diagnostics
 - entity-centric sequence + lifecycle outputs (`entered/reentered/exited`)
+- entity observation modes: `schedule` and heuristic `auto_motion`
 
 ## Coordination stack
 
@@ -243,8 +244,8 @@ REBUILD_DATA=1 bash run_scripts/presentations/build_networked_contextual_hermes_
 - Simulator is synthetic packet-level coordination, not full telemetry replay.
 - LP policy is receding-horizon one-step optimization.
 - Joint compute scheduling + routing optimization is not yet integrated.
-- Entity lifecycle depends on provided `entity_observations_by_window`; automatic
-  detector/tracker/re-identification from raw video is not integrated yet.
+- `auto_motion` exists for raw video but is heuristic blob tracking, not full
+  detector/tracker/re-identification quality.
 
 Next work:
 
