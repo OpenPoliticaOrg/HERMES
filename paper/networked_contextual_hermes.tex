@@ -24,7 +24,7 @@
 \maketitle
 
 \begin{abstract}
-We present a practical extension of HERMES for real-time multi-feed surveillance by coupling context-aware event inference with network-level message-passing optimization. The system combines dynamic event candidate routing, pluggable observation classifiers, context-conditional inhomogeneous Markov filtering with sliding-window updates, and policy-driven network transport simulation for inter-node coordination. On synthetic surveillance mesh scenarios with staged stress contexts (crowding, uplink loss, node degradation), the framework supports online adaptation and policy comparison between receding-horizon min-cost linear programming and decentralized backpressure routing. The implementation includes reproducible scripts, diagnostics, and weighted policy ranking for deployment-oriented decision making.
+We present a practical extension of HERMES for real-time multi-feed surveillance by coupling context-aware event inference with network-level message-passing optimization. The system combines dynamic event candidate routing, pluggable observation classifiers, context-conditional inhomogeneous Markov filtering with sliding-window updates, entity-centric sequence and lifecycle tracking, and policy-driven network transport simulation for inter-node coordination. On synthetic surveillance mesh scenarios with staged stress contexts (crowding, uplink loss, node degradation), the framework supports online adaptation and policy comparison between receding-horizon min-cost linear programming and decentralized backpressure routing. The implementation includes reproducible scripts, diagnostics, and weighted policy ranking for deployment-oriented decision making.
 \end{abstract}
 
 \section{Introduction}
@@ -34,8 +34,8 @@ We address this by integrating contextual event inference and network coordinati
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=1.5em]
-  \item Dynamic event inference stack with taxonomy routing, configurable observation classifier fusion, and context-conditional Markov filtering.
-  \item Online runtime diagnostics with live transition/posterior visualization and interactive context switching.
+  \item Dynamic event inference stack with taxonomy routing, configurable observation classifier fusion, context-conditional Markov filtering, and entity lifecycle tracking.
+  \item Online runtime diagnostics with live transition/posterior visualization, interactive context switching, and entity trajectory timelines.
   \item Network message-passing simulator with two policies: receding-horizon min-cost LP and backpressure.
   \item Surveillance-specific coordination KPIs (handoff success, stale ratio, duplicate alerts, recovery behavior).
   \item Direction-aware weighted policy ranking for deployment-specific optimization targets.
@@ -71,6 +71,9 @@ The implementation supports:
   \item \texttt{markov\_order}: higher-memory prior blending,
   \item optional symbolic transfer entropy diagnostics.
 \end{itemize}
+
+\subsection{Entity sequence and lifecycle tracking}
+Per-window entity observations update per-entity event sequences and Markov histories. The runtime exports lifecycle sets (\texttt{entered\_entities}, \texttt{reentered\_entities}, \texttt{exited\_entities}) together with active/inactive entity sets, and visualizes these states as timeline trajectories in the live dashboard.
 
 \subsection{Network message passing model}
 We model a directed graph $G=(V,E)$ with time-varying edge capacities $C_e(t)$, delays $d_e$, and losses $p_e(t)$. Traffic commodities include source/destination/rate and surveillance metadata (\texttt{kind}, \texttt{ttl\_steps}, \texttt{copies}).
@@ -140,6 +143,7 @@ In representative synthetic surveillance runs with provided defaults, min-cost L
   \item Packet-level simulator is synthetic and does not yet replay real telemetry traces.
   \item Min-cost LP is one-step receding-horizon optimization, not full finite-horizon global control.
   \item The current framework does not jointly optimize model compute scheduling and network routing.
+  \item Entity lifecycle currently depends on provided per-window \texttt{entity\_observations}; automatic detector/tracker/re-identification from raw video is not integrated in this module.
 \end{enumerate}
 
 \section{Conclusion}
@@ -155,4 +159,3 @@ bash run_scripts/network_message_passing/kpi_report.sh \
 \end{verbatim}
 
 \end{document}
-

@@ -78,6 +78,9 @@ def main():
     event_markov_mod = _load_module(
         root / "lavis/common/event_markov.py", "event_markov_local"
     )
+    entity_seq_mod = _load_module(
+        root / "lavis/common/entity_event_sequence.py", "entity_event_sequence_local"
+    )
 
     taxonomy = event_taxonomy_mod.EventTaxonomy(str(taxonomy_path))
     obs_set = event_obs_mod.ObservationClassifierSet.from_file(str(observation_path))
@@ -199,6 +202,101 @@ def main():
     if te_value is None:
         fail("Symbolic transfer entropy did not produce a value.")
 
+    # 6) Entity sequence tracker check.
+    markov_entity = event_markov_mod.EventMarkovChain.from_file(str(markov_path))
+    entity_tracker = entity_seq_mod.EntityEventSequenceTracker(
+        markov_chain=markov_entity,
+        context_field="ecological_context",
+        history_limit=8,
+        default_entity_id="__scene__",
+        default_markov_topk=3,
+        default_observation_topk=3,
+        default_missing_tolerance=0,
+    )
+    entity_tracker.begin_window(
+        base_sequence_id="cam0",
+        context={"ecological_context": "salon"},
+        image_id="cam0_0",
+    )
+    e1 = entity_tracker.update_entity(
+        base_sequence_id="cam0",
+        entity_id="person_1",
+        observation_scores={
+            "coin:put_on_hair_extensions": 0.82,
+            "coin:change_car_tire": 0.18,
+        },
+        context={"ecological_context": "salon"},
+        image_id="cam0_0",
+    )
+    e2 = entity_tracker.update_entity(
+        base_sequence_id="cam0",
+        entity_id="person_2",
+        observation_scores={
+            "coin:put_on_hair_extensions": 0.22,
+            "coin:change_car_tire": 0.78,
+        },
+        context={"ecological_context": "garage"},
+        image_id="cam0_0",
+    )
+    life0 = entity_tracker.finalize_window("cam0")
+
+    entity_tracker.begin_window(
+        base_sequence_id="cam0",
+        context={"ecological_context": "garage"},
+        image_id="cam0_1",
+    )
+    e3 = entity_tracker.update_entity(
+        base_sequence_id="cam0",
+        entity_id="person_1",
+        observation_scores={
+            "coin:put_on_hair_extensions": 0.35,
+            "coin:change_car_tire": 0.65,
+        },
+        context={"ecological_context": "garage"},
+        image_id="cam0_1",
+    )
+    life1 = entity_tracker.finalize_window("cam0")
+
+    entity_tracker.begin_window(
+        base_sequence_id="cam0",
+        context={"ecological_context": "garage"},
+        image_id="cam0_2",
+    )
+    e4 = entity_tracker.update_entity(
+        base_sequence_id="cam0",
+        entity_id="person_2",
+        observation_scores={
+            "coin:put_on_hair_extensions": 0.21,
+            "coin:change_car_tire": 0.79,
+        },
+        context={"ecological_context": "garage"},
+        image_id="cam0_2",
+    )
+    life2 = entity_tracker.finalize_window("cam0")
+
+    if e1 is None or e2 is None or e3 is None:
+        fail("Entity sequence tracker did not return updates.")
+    if e4 is None:
+        fail("Entity sequence tracker did not return re-entry update.")
+    if int(e3.get("sequence_length", 0)) != 2:
+        fail("Entity sequence length did not increment for repeated entity observations.")
+    if int(e4.get("sequence_length", 0)) != 2:
+        fail("Entity sequence length is incorrect after entity re-entry.")
+    if len(e3.get("event_sequence", [])) != 2:
+        fail("Entity event sequence history is missing expected steps.")
+    if e3.get("observation_state", {}).get("event_id") != "coin:change_car_tire":
+        fail("Entity observation top event is incorrect.")
+    if e2.get("lifecycle_state") != "entered":
+        fail("Initial lifecycle state for person_2 should be entered.")
+    if "person_2" not in life1.get("exited_entities", []):
+        fail("person_2 was not marked as exited on missed window.")
+    if e4.get("lifecycle_state") != "reentered":
+        fail("person_2 should be marked as reentered after returning.")
+    if "person_1" not in life2.get("exited_entities", []):
+        fail("person_1 was not marked as exited when unobserved in window 3.")
+    if "person_2" not in life2.get("reentered_entities", []):
+        fail("Window lifecycle summary is missing reentered person_2.")
+
     result = {
         "status": "ok",
         "paths": {
@@ -213,6 +311,10 @@ def main():
             "garage_post": garage_post,
             "switch_post": switched,
             "te_bits": te_value,
+            "entity_sequence_person_1_len": int(e3.get("sequence_length", 0)),
+            "entity_sequence_person_2_len": int(e4.get("sequence_length", 0)),
+            "entity_lifecycle_window_1_exited": life1.get("exited_entities", []),
+            "entity_lifecycle_window_2_reentered": life2.get("reentered_entities", []),
         },
     }
 

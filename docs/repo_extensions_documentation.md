@@ -19,6 +19,8 @@ Extension focus added in this workspace:
 - Pluggable observation classifiers (prototype/binary/custom)
 - Context-conditional inhomogeneous Markov filtering with sliding windows
 - Live streaming with interactive context switching and Markov diagnostics
+- Entity-centric event sequencing with enter/exit/re-entry lifecycle state
+- Live entity trajectory visualization for timeline-level monitoring
 - Network message-passing simulator with policy comparison
 - Surveillance-specific coordination KPI evaluation and Monte Carlo reporting
 
@@ -59,12 +61,18 @@ Main files:
 
 ### 3.2 Key capabilities
 
+- Dynamic candidate routing from taxonomy/classifier rules per observation
+- Pluggable observation scoring via prototype/binary/custom Python classifiers
+- Structured event output (`event_predictions`, `observation_scores`, stable `event_id`)
 - Context-conditioned transition matrices (`transition_mode=context`)
 - Inhomogeneous transitions (schedule/provider support)
 - Sliding-window re-filtering (`window_size`)
 - Higher-memory prior blending (`markov_order`)
 - Optional symbolic matrix transfer entropy diagnostics (`transfer_entropy_mode=symbolic_matrix`)
 - Interactive context control in live dashboard
+- Entity-centric online event sequences (`entity_event_sequences`) with per-entity Markov state/history updates
+- Entity lifecycle tracking (`entity_lifecycle`) for enter/exit/re-entry and active-set state
+- Live entity trajectory strip in visualization (entered/reentered/active/exited/inactive)
 
 ### 3.3 Core configs
 
@@ -106,6 +114,28 @@ Sweeps:
 - `markov_order`
 - `window_size`
 - symbolic TE target/source orders
+
+### 4.4 Entity-sequence streaming input
+
+Optional entity schedule input:
+
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/data/taxonomy/example_entity_observations_by_window.json`
+
+Live run (entity-aware):
+
+```bash
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/context_markov/live.sh \
+  0 salon \
+  "what is the activity in the video?" \
+  cam0 \
+  /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/logs/context_markov_entity.jsonl \
+  "" \
+  /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/data/taxonomy/example_entity_observations_by_window.json \
+  0
+```
+
+When entity schedule input is enabled, unlisted windows are treated as no
+entities observed so exits are surfaced in `entity_lifecycle`.
 
 ## 5) Network message passing extension architecture
 
@@ -189,6 +219,9 @@ Default outputs:
 - `min_cost_lp` is one-step receding-horizon optimization, not full finite-horizon optimal control.
 - Simulator is packet-level and synthetic; it does not include full vision-model compute scheduling or GPU contention.
 - KPI semantics depend on config assumptions (TTL/copies/context stress patterns).
+- Entity lifecycle/sequence tracking currently consumes provided per-window
+  `entity_observations`; automatic detection/re-identification from raw video
+  is not integrated in this module yet.
 
 ## 10) Suggested next engineering milestones
 

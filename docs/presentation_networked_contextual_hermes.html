@@ -435,6 +435,7 @@ pre code {
 <li>prototype, binary, and custom observation classifiers</li>
 <li>context-conditional Markov updates (<code>window_size</code>, <code>markov_order</code>)</li>
 <li>optional symbolic transfer entropy diagnostics</li>
+<li>entity-centric sequence + lifecycle outputs (<code>entered/reentered/exited</code>)</li>
 </ul>
 <h2 id="coordination-stack">Coordination stack</h2>
 <ul>
@@ -1000,7 +1001,8 @@ pre code {
 <li>For each observation window, run classifier set and update Markov posterior.</li>
 <li>Emit event messages (<code>alert</code>, <code>track</code>, <code>handoff</code>, <code>heartbeat</code>) to the network layer.</li>
 <li>Route messages with selected policy (<code>min_cost_lp</code> or <code>backpressure</code>).</li>
-<li>Inspect live state: classifications, transition matrix, posterior, queue pressure, KPI drift.</li>
+<li>Inspect live state: classifications, transition matrix, posterior, queue pressure, KPI drift.<br />
+Include entity trajectory states over windows.</li>
 <li>Adjust context/hyperparameters online and monitor adaptation.</li>
 </ol>
 </section>
@@ -2149,6 +2151,8 @@ pre code {
 <li>Simulator is synthetic packet-level coordination, not full telemetry replay.</li>
 <li>LP policy is receding-horizon one-step optimization.</li>
 <li>Joint compute scheduling + routing optimization is not yet integrated.</li>
+<li>Entity lifecycle depends on provided <code>entity_observations_by_window</code>; automatic<br />
+detector/tracker/re-identification from raw video is not integrated yet.</li>
 </ul>
 <p>Next work:</p>
 <ol>

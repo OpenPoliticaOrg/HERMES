@@ -4,7 +4,7 @@
 
 ## Abstract
 
-We present a practical extension of HERMES for real-time, multi-feed surveillance analysis by coupling context-aware event inference with network-level message-passing optimization. The system combines (i) dynamic event candidate routing, (ii) pluggable observation classifiers, (iii) context-conditional inhomogeneous Markov filtering with sliding-window updates, and (iv) policy-driven network transport simulation for inter-node coordination. On synthetic surveillance mesh scenarios with staged stress contexts (crowding, uplink loss, node degradation), the proposed framework supports online adaptation and policy comparison between receding-horizon min-cost linear programming and decentralized backpressure routing. Results from Monte Carlo experiments indicate improved timely handoff delivery and reduced stale-event rates under weighted policy selection. We release implementation details, configs, scripts, and reproducible evaluation pipelines in-repo.
+We present a practical extension of HERMES for real-time, multi-feed surveillance analysis by coupling context-aware event inference with network-level message-passing optimization. The system combines (i) dynamic event candidate routing, (ii) pluggable observation classifiers, (iii) context-conditional inhomogeneous Markov filtering with sliding-window updates, (iv) entity-centric sequence and lifecycle tracking, and (v) policy-driven network transport simulation for inter-node coordination. On synthetic surveillance mesh scenarios with staged stress contexts (crowding, uplink loss, node degradation), the proposed framework supports online adaptation and policy comparison between receding-horizon min-cost linear programming and decentralized backpressure routing. Results from Monte Carlo experiments indicate improved timely handoff delivery and reduced stale-event rates under weighted policy selection. We release implementation details, configs, scripts, and reproducible evaluation pipelines in-repo.
 
 ## 1. Introduction
 
@@ -22,10 +22,12 @@ Most existing pipelines optimize these components separately. We instead build a
 1. **Dynamic contextual event inference stack** in HERMES:
    - taxonomy-driven candidate routing,
    - configurable observation classifier fusion,
-   - context-conditional Markov filtering with sliding windows.
+   - context-conditional Markov filtering with sliding windows,
+   - entity-centric event sequence updates and lifecycle state tracking.
 2. **Online diagnostics**:
    - live posterior/matrix visualization,
-   - interactive ecological context switching during streaming.
+   - interactive ecological context switching during streaming,
+   - entity trajectory timelines (entered/reentered/active/exited/inactive).
 3. **Network coordination simulator**:
    - min-cost LP and backpressure policies under context-conditioned link/traffic changes.
 4. **Surveillance-specific KPI layer**:
@@ -54,7 +56,8 @@ Let video observations arrive in windows \(t=1,\dots,T\). For each window:
 1. The classifier ranks event candidates from taxonomy-selected label subsets.
 2. Observation-level scores are fused by user-defined classifier sets.
 3. A context-conditional Markov module updates posterior event beliefs.
-4. Event messages are routed across node network policies for downstream fusion.
+4. Entity timelines are updated per observation window.
+5. Event messages are routed across node network policies for downstream fusion.
 
 This yields a perception-to-transport loop where uncertainty and transport quality can be jointly analyzed.
 
@@ -81,7 +84,19 @@ Sliding-window mode recomputes posteriors over last \(W\) observations; higher-o
 
 Optional symbolic matrix transfer entropy tracks directed dependence from source symbols (e.g., context labels) to target event-state symbols with configurable source/target orders.
 
-### 4.4 Network message passing model
+### 4.4 Entity sequence and lifecycle tracking
+
+Per-window entity observations update per-entity event sequences and Markov state
+history. The runtime also emits lifecycle sets:
+
+- `entered_entities`
+- `reentered_entities`
+- `exited_entities`
+- active/inactive entity sets
+
+These lifecycle outputs are visualized in a live trajectory strip across windows.
+
+### 4.5 Network message passing model
 
 We model directed graph \(G=(V,E)\), edge capacities \(C_e(t)\), delays \(d_e\), and loss \(p_e(t)\). Traffic commodities \(k\) include source, destination, rate, type, TTL, and replication count.
 
@@ -103,7 +118,7 @@ P_{e,k}(t)=\left(Q_{u,k}(t)-Q_{v,k}(t)\right)
 
 Positive-pressure commodities are allocated edge capacity greedily.
 
-### 4.5 Coordination KPIs
+### 4.6 Coordination KPIs
 
 For surveillance relevance, we track:
 
@@ -114,7 +129,7 @@ For surveillance relevance, we track:
 - alert duplicate rate,
 - backlog recovery after context switches.
 
-### 4.6 Weighted policy ranking
+### 4.7 Weighted policy ranking
 
 For each metric \(m\), per-policy mean is normalized to \([0,1]\) with direction-aware scaling (maximize/minimize). Final score:
 
@@ -205,6 +220,9 @@ Weighted ranking allows policy selection based on deployment priorities:
 1. Simulator is synthetic and packet-level.
 2. LP is one-step receding-horizon, not global finite-horizon optimization.
 3. No explicit compute-node scheduling or model inference latency coupling yet.
+4. Entity lifecycle currently depends on provided per-window
+   `entity_observations`; automatic detector/tracker/re-identification from raw
+   video is not integrated in this module.
 
 ## 9. Conclusion
 
@@ -217,4 +235,3 @@ We introduced a practical extension to HERMES that combines context-aware event 
 3. Add policy sensitivity analysis over ranking weights.
 4. Add confidence intervals and significance tests across larger seed sets.
 5. Add qualitative case studies (successful vs failed handoff episodes).
-

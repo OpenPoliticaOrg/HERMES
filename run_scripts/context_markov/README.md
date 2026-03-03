@@ -1,5 +1,18 @@
 # Context Markov Quick Run
 
+## What This Supports
+- Dynamic event ranking from taxonomy-selected candidate sets.
+- Prototype/binary/custom observation classifiers for event scoring.
+- Context-conditional inhomogeneous Markov updates with sliding windows.
+- Optional symbolic matrix transfer entropy diagnostics.
+- Per-entity sequence updates and lifecycle tracking (`entered/reentered/exited`).
+- Live dashboard with transition matrix and entity trajectory timeline.
+
+Current constraint:
+- Entity lifecycle/sequences are computed from provided
+  `entity_observations_by_window` input; automatic entity detection/tracking
+  from raw video frames is not part of this module yet.
+
 ## 1) Fast smoke test (no model checkpoint required)
 ```bash
 bash run_scripts/context_markov/test.sh
@@ -34,6 +47,8 @@ Arguments:
 4. `sequence_id` (default `cam0`)
 5. `output_jsonl` (default `logs/context_markov_live.jsonl`)
 6. `checkpoint_path` (optional)
+7. `entity_observations_by_window` (optional JSON schedule path)
+8. `entity_missing_tolerance` (default `0`, windows allowed missing before exit)
 
 Example with file input and checkpoint:
 ```bash
@@ -42,6 +57,16 @@ bash run_scripts/context_markov/live.sh /path/video.mp4 garage \
   cam_file \
   logs/context_markov_file.jsonl \
   /path/model.pth
+```
+
+Example with per-entity sequence updates:
+```bash
+bash run_scripts/context_markov/live.sh 0 salon \
+  "what is the activity in the video?" \
+  cam0 \
+  logs/context_markov_entity.jsonl \
+  "" \
+  data/taxonomy/example_entity_observations_by_window.json
 ```
 
 ## 2.5) Live stream with matrix/debug visualization
@@ -56,6 +81,7 @@ This enables:
   - posterior state probabilities
   - transition matrix used at each step
   - context + step diagnostics
+  - entity trajectory strip timeline (entered/reentered/active/exited/inactive)
 - interactive context switching from keyboard (without restart)
 
 Optional `live_viz.sh` arg 7:
@@ -66,6 +92,12 @@ Optional `live_viz.sh` args 8-11:
 2. `window_size` (>=0)
 3. `te_target_order` (>=1, enables symbolic TE)
 4. `te_source_order` (>=1, enables symbolic TE)
+
+Optional `live_viz.sh` arg 12:
+1. `entity_observations_by_window` JSON schedule path
+
+Optional `live_viz.sh` arg 13:
+1. `entity_missing_tolerance` windows before marking entity exit
 
 Hotkeys (focus the matplotlib window first):
 - `[` or left arrow: previous context
@@ -107,3 +139,33 @@ Use `stream_online.py` directly with a context schedule JSON:
 ```json
 {"0": "garage", "30": "street", "80": "salon"}
 ```
+
+## 5) Entity observation schedule (optional)
+Use per-window entity observations to maintain online event sequences for each
+entity ID:
+
+```json
+{
+  "0": [
+    {
+      "entity_id": "person_1",
+      "observation_scores": {
+        "coin:put_on_hair_extensions": 0.86,
+        "coin:change_car_tire": 0.14
+      }
+    }
+  ]
+}
+```
+
+Reference file:
+- `data/taxonomy/example_entity_observations_by_window.json`
+
+When provided, each output window includes:
+- `entity_event_sequences` with updated per-entity sequence history
+- `entity_lifecycle` with `entered_entities`, `reentered_entities`,
+  `exited_entities`, `active_entities`, and per-entity activity state
+
+Schedule behavior:
+- if the schedule file is supplied, windows not listed are treated as
+  `[]` (no entities observed), enabling explicit exit detection.

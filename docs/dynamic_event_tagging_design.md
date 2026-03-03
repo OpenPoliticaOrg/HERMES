@@ -20,10 +20,29 @@ Enable HERMES classification to:
 2. Map predicted labels to stable `event_id`s using a taxonomy.
 3. Emit structured outputs for downstream event graph/timeline systems.
 
-## Current Gaps
-- Classification currently uses `model.generate(...)` and exact string match.
-- Candidate ranking (`predict_class`) exists in the model but is not used by the classification task.
-- No stable event ID mapping layer exists between model text and downstream systems.
+## Capability Snapshot
+Current implemented capabilities:
+- Dynamic taxonomy/classifier routing with ranked candidate events.
+- Pluggable observation classifiers (`prototype_label`, `confidence_threshold`,
+  `keyword_binary`, and custom `python` class).
+- Context-conditional inhomogeneous Markov filtering with sliding windows.
+- Optional higher-order Markov memory and symbolic matrix transfer entropy diagnostics.
+- Live stream inference (camera/file) with interactive context switching.
+- Per-entity online event sequence updates (`entity_event_sequences`).
+- Per-window entity lifecycle summaries (`entity_lifecycle`) including
+  `entered`, `reentered`, `exited`, and active/inactive sets.
+- Live visualization of class confidence, Markov posterior, transition matrix,
+  and color-coded entity trajectories over windows.
+
+Current constraint:
+- Entity lifecycle/sequence updates consume externally provided per-window
+  `entity_observations`; automatic detector/tracker/re-identification from
+  raw video frames is not included in this module.
+
+## Remaining Gaps
+- Automatic entity detection/tracking/re-identification from raw video is not
+  integrated; entity lifecycle depends on provided `entity_observations`.
+- No built-in multi-camera identity association module is included in this layer.
 
 ## Proposed Architecture
 
@@ -108,6 +127,8 @@ Each prediction record contains both backward-compatible and structured fields:
 Notes:
 - `caption` is preserved to avoid breaking existing top-1/top-5 metric code.
 - `confidence` is computed from softmax over negative candidate losses.
+- `entity_event_sequences` (when entity observations are provided) contains
+  per-entity online sequence state/history.
 
 ## Config Knobs
 Add run config options:
@@ -122,6 +143,10 @@ Add run config options:
 - `markov_topk`: number of posterior states to export per observation
 - `markov_context_field`: sample field carrying ecological context (default `ecological_context`)
 - `markov_debug`: include `T_t`, prior/predicted/likelihood/posterior internals in output
+- `entity_default_id`: fallback entity ID if no entity observations are supplied
+- `entity_sequence_history`: max retained sequence length per entity
+- `entity_sequence_observation_topk`: top observation scores exported per entity step
+- `entity_sequence_missing_tolerance`: consecutive missed windows before entity exit
 
 Example CLI override:
 
@@ -245,6 +270,8 @@ python stream_online.py \
   --question "what is the activity in the video?" \
   --sequence-id cam0 \
   --ecological-context garage \
+  --entity-observations-by-window data/taxonomy/example_entity_observations_by_window.json \
+  --entity-missing-tolerance 0 \
   --context-field ecological_context \
   --ecological-context-by-window /path/to/context_schedule.json \
   --chunk-seconds 3 \
@@ -268,11 +295,23 @@ Each window outputs JSON with:
 - observation model scores (`observation_scores`)
 - online Markov posterior (`markov_posterior`, `markov_state`)
 - optional Markov internals (`markov_debug`) when `--debug-markov` or `run.markov_debug=True`
+- per-entity online sequences (`entity_event_sequences`) when entity schedule is provided
+- per-window entity lifecycle summary (`entity_lifecycle`) with enter/exit/re-entry sets
+
+If `--entity-observations-by-window` is provided, missing window indices are
+interpreted as no observed entities (`[]`) so exits are tracked online.
 
 For one-command live visualization:
 ```bash
 bash run_scripts/context_markov/live_viz.sh 0 salon
 ```
+
+Visualization panels include:
+- top classifications
+- Markov posterior
+- transition matrix (debug mode)
+- diagnostics text panel
+- entity trajectory timeline strip (entered/reentered/active/exited/inactive)
 
 ## Fallback Behavior
 If taxonomy/classifier config is missing:

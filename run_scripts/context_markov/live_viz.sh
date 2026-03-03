@@ -14,6 +14,8 @@ MARKOV_ORDER="${8:-0}"
 WINDOW_SIZE="${9:--1}"
 TE_TARGET_ORDER="${10:-0}"
 TE_SOURCE_ORDER="${11:-0}"
+ENTITY_OBS_BY_WINDOW="${12:-}"
+ENTITY_MISSING_TOL="${13:-0}"
 
 mkdir -p "${ROOT_DIR}/logs"
 
@@ -66,6 +68,14 @@ fi
 
 if [[ "${TE_SOURCE_ORDER}" -ge 1 ]]; then
   CMD+=(--te-source-order-override "${TE_SOURCE_ORDER}")
+fi
+
+if [[ -n "${ENTITY_OBS_BY_WINDOW}" ]]; then
+  CMD+=(--entity-observations-by-window "${ENTITY_OBS_BY_WINDOW}")
+fi
+
+if [[ "${ENTITY_MISSING_TOL}" -ge 0 ]]; then
+  CMD+=(--entity-missing-tolerance "${ENTITY_MISSING_TOL}")
 fi
 
 "${CMD[@]}"

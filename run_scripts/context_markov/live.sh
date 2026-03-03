@@ -9,6 +9,8 @@ QUESTION="${3:-what is the activity in the video?}"
 SEQUENCE_ID="${4:-cam0}"
 OUTPUT_JSONL="${5:-${ROOT_DIR}/logs/context_markov_live.jsonl}"
 CHECKPOINT_PATH="${6:-}"
+ENTITY_OBS_BY_WINDOW="${7:-}"
+ENTITY_MISSING_TOL="${8:-0}"
 
 mkdir -p "${ROOT_DIR}/logs"
 
@@ -33,6 +35,14 @@ CMD=(
 
 if [[ -n "${CHECKPOINT_PATH}" ]]; then
   CMD+=(--checkpoint "${CHECKPOINT_PATH}")
+fi
+
+if [[ -n "${ENTITY_OBS_BY_WINDOW}" ]]; then
+  CMD+=(--entity-observations-by-window "${ENTITY_OBS_BY_WINDOW}")
+fi
+
+if [[ "${ENTITY_MISSING_TOL}" -ge 0 ]]; then
+  CMD+=(--entity-missing-tolerance "${ENTITY_MISSING_TOL}")
 fi
 
 "${CMD[@]}"

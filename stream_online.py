@@ -196,22 +196,54 @@ class LiveMarkovVisualizer:
         max_states=8,
         context_field="ecological_context",
         context_controller=None,
+        max_entity_rows=10,
+        max_entity_windows=32,
     ):
         import matplotlib.pyplot as plt
+        from matplotlib.colors import ListedColormap, BoundaryNorm
 
         self.max_classes = max_classes
         self.max_states = max_states
         self.context_field = context_field
         self.context_controller = context_controller
+        self.max_entity_rows = max(1, int(max_entity_rows))
+        self.max_entity_windows = max(4, int(max_entity_windows))
         self.plt = plt
         self.plt.ion()
+        self.ListedColormap = ListedColormap
+        self.BoundaryNorm = BoundaryNorm
 
-        self.fig, self.axes = self.plt.subplots(2, 2, figsize=(13, 8))
-        self.ax_class = self.axes[0][0]
-        self.ax_state = self.axes[0][1]
-        self.ax_matrix = self.axes[1][0]
-        self.ax_info = self.axes[1][1]
+        self.entity_window_states = {}
+        self.entity_ids_seen = set()
+        self.entity_code_colors = {
+            0: "#FFFFFF",  # not tracked
+            1: "#D9D9D9",  # inactive
+            2: "#BFD8FF",  # active hold (not observed this window)
+            3: "#3B82F6",  # active observed
+            4: "#22C55E",  # entered
+            5: "#06B6D4",  # re-entered
+            6: "#EF4444",  # exited
+        }
+        self.entity_code_labels = {
+            1: "inactive",
+            2: "active_hold",
+            3: "active_observed",
+            4: "entered",
+            5: "reentered",
+            6: "exited",
+        }
+
+        self.fig = self.plt.figure(figsize=(14, 9))
+        grid = self.fig.add_gridspec(
+            3, 2, height_ratios=[1.0, 1.0, 0.95], hspace=0.38, wspace=0.28
+        )
+        self.ax_class = self.fig.add_subplot(grid[0, 0])
+        self.ax_state = self.fig.add_subplot(grid[0, 1])
+        self.ax_matrix = self.fig.add_subplot(grid[1, 0])
+        self.ax_info = self.fig.add_subplot(grid[1, 1])
+        self.ax_entity = self.fig.add_subplot(grid[2, :])
         self.matrix_cbar = None
+        self.entity_cbar = None
         self.fig.canvas.manager.set_window_title("HERMES Live Markov Monitor")
         if self.context_controller is not None:
             self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
@@ -228,6 +260,15 @@ class LiveMarkovVisualizer:
             return text
         return text[: n - 3] + "..."
 
+    def _render_entity_ids(self, values, max_items=3, width=12):
+        values = values or []
+        if len(values) == 0:
+            return "-"
+        rendered = [self._truncate(v, n=width) for v in values[:max_items]]
+        if len(values) > max_items:
+            rendered.append("...")
+        return ", ".join(rendered)
+
     def _extract_transition(self, result):
         debug = result.get("markov_debug") or {}
         if "last_transition" in debug and debug["last_transition"] is not None:
@@ -237,6 +278,154 @@ class LiveMarkovVisualizer:
         if len(trace) > 0 and trace[-1].get("transition") is not None:
             return np.array(trace[-1]["transition"], dtype=float)
         return None
+
+    @staticmethod
+    def _sorted_entities_for_display(entity_set):
+        return sorted(entity_set, key=lambda x: str(x))
+
+    def _update_entity_timeline_state(self, result):
+        window_index = result.get("window_index")
+        if window_index is None:
+            return
+        try:
+            window_index = int(window_index)
+        except Exception:
+            return
+
+        lifecycle = result.get("entity_lifecycle") or {}
+        if not isinstance(lifecycle, dict):
+            lifecycle = {}
+
+        entered = set(lifecycle.get("entered_entities") or [])
+        reentered = set(lifecycle.get("reentered_entities") or [])
+        exited = set(lifecycle.get("exited_entities") or [])
+        active = set(lifecycle.get("active_entities") or [])
+        inactive = set(lifecycle.get("inactive_entities") or [])
+        observed = set(lifecycle.get("observed_entities") or [])
+
+        entities = set()
+        entities.update(entered)
+        entities.update(reentered)
+        entities.update(exited)
+        entities.update(active)
+        entities.update(inactive)
+        entities.update(observed)
+
+        for item in result.get("entity_event_sequences") or []:
+            if not isinstance(item, dict):
+                continue
+            entity_id = item.get("entity_id")
+            if entity_id is not None:
+                entities.add(str(entity_id))
+
+        if len(entities) == 0:
+            self.entity_window_states[window_index] = {}
+            return
+
+        state_map = {}
+        for entity_id in entities:
+            entity_id = str(entity_id)
+            if entity_id in exited:
+                code = 6
+            elif entity_id in reentered:
+                code = 5
+            elif entity_id in entered:
+                code = 4
+            elif entity_id in active and entity_id in observed:
+                code = 3
+            elif entity_id in active:
+                code = 2
+            elif entity_id in inactive:
+                code = 1
+            else:
+                code = 0
+            state_map[entity_id] = code
+            self.entity_ids_seen.add(entity_id)
+
+        self.entity_window_states[window_index] = state_map
+
+        if len(self.entity_window_states) > self.max_entity_windows * 3:
+            keep_from = max(window_index - self.max_entity_windows * 2, 0)
+            self.entity_window_states = {
+                k: v for k, v in self.entity_window_states.items() if int(k) >= keep_from
+            }
+
+    def _draw_entity_timeline(self, result):
+        self._update_entity_timeline_state(result)
+        self.ax_entity.clear()
+        if self.entity_cbar is not None:
+            try:
+                self.entity_cbar.remove()
+            except Exception:
+                pass
+            self.entity_cbar = None
+
+        window_index = result.get("window_index")
+        if window_index is None:
+            self.ax_entity.axis("off")
+            self.ax_entity.set_title("Entity Trajectories")
+            return
+        try:
+            window_index = int(window_index)
+        except Exception:
+            self.ax_entity.axis("off")
+            self.ax_entity.set_title("Entity Trajectories")
+            return
+
+        all_windows = sorted(self.entity_window_states.keys())
+        if len(all_windows) == 0:
+            self.ax_entity.axis("off")
+            self.ax_entity.set_title("Entity Trajectories")
+            return
+
+        min_window = max(window_index - self.max_entity_windows + 1, 0)
+        windows = [w for w in all_windows if int(w) >= min_window and int(w) <= window_index]
+        if len(windows) == 0:
+            windows = [window_index]
+
+        entities = self._sorted_entities_for_display(self.entity_ids_seen)
+        if len(entities) == 0:
+            self.ax_entity.axis("off")
+            self.ax_entity.set_title("Entity Trajectories")
+            return
+
+        active_entities = result.get("entity_lifecycle", {}).get("active_entities") or []
+        active_set = set([str(x) for x in active_entities])
+        entities = sorted(
+            entities,
+            key=lambda eid: (0 if eid in active_set else 1, str(eid)),
+        )[: self.max_entity_rows]
+
+        mat = np.zeros((len(entities), len(windows)), dtype=float)
+        for wi, w in enumerate(windows):
+            state_map = self.entity_window_states.get(int(w), {})
+            for ei, entity_id in enumerate(entities):
+                mat[ei, wi] = float(state_map.get(entity_id, 0))
+
+        colors = [self.entity_code_colors[idx] for idx in sorted(self.entity_code_colors.keys())]
+        cmap = self.ListedColormap(colors)
+        boundaries = np.arange(-0.5, len(colors) + 0.5, 1.0)
+        norm = self.BoundaryNorm(boundaries, cmap.N)
+
+        im = self.ax_entity.imshow(mat, aspect="auto", cmap=cmap, norm=norm, interpolation="nearest")
+        self.ax_entity.set_title("Entity Trajectories (Window x Entity)")
+        self.ax_entity.set_xlabel("Window Index")
+        self.ax_entity.set_ylabel("Entity")
+        self.ax_entity.set_yticks(np.arange(len(entities)))
+        self.ax_entity.set_yticklabels([self._truncate(x, n=18) for x in entities], fontsize=8)
+
+        x_tick_step = max(1, int(np.ceil(len(windows) / 8.0)))
+        x_tick_idx = list(range(0, len(windows), x_tick_step))
+        if len(windows) > 0 and (len(windows) - 1) not in x_tick_idx:
+            x_tick_idx.append(len(windows) - 1)
+        self.ax_entity.set_xticks(x_tick_idx)
+        self.ax_entity.set_xticklabels([str(windows[idx]) for idx in x_tick_idx], fontsize=8)
+
+        legend_codes = [4, 5, 3, 2, 6, 1]
+        legend_labels = [self.entity_code_labels[c] for c in legend_codes]
+        ticks = [float(c) for c in legend_codes]
+        self.entity_cbar = self.fig.colorbar(im, ax=self.ax_entity, fraction=0.024, pad=0.01, ticks=ticks)
+        self.entity_cbar.ax.set_yticklabels(legend_labels, fontsize=7)
 
     def update(self, result):
         event_predictions = (result.get("event_predictions") or [])[: self.max_classes]
@@ -323,6 +512,32 @@ class LiveMarkovVisualizer:
             f"TE: {te_text}",
             f"Step: {debug.get('step_idx', '-')}",
         ]
+        entity_sequences = result.get("entity_event_sequences") or []
+        lines.append(f"Entities Updated: {len(entity_sequences)}")
+        for entity_item in entity_sequences[:3]:
+            entity_state = entity_item.get("markov_state") or {}
+            entity_name = self._truncate(entity_item.get("entity_id", "-"), n=16)
+            state_label = self._truncate(entity_state.get("event_id", "-"), n=24)
+            state_prob = entity_state.get("prob", None)
+            if state_prob is None:
+                lines.append(f"  {entity_name}: {state_label}")
+            else:
+                lines.append(f"  {entity_name}: {state_label} ({float(state_prob):.2f})")
+        if len(entity_sequences) > 3:
+            lines.append("  ...")
+        entity_lifecycle = result.get("entity_lifecycle") or {}
+        if isinstance(entity_lifecycle, dict) and len(entity_lifecycle) > 0:
+            entered = entity_lifecycle.get("entered_entities") or []
+            reentered = entity_lifecycle.get("reentered_entities") or []
+            exited = entity_lifecycle.get("exited_entities") or []
+            active_count = entity_lifecycle.get("active_count", 0)
+            tracked_count = entity_lifecycle.get("total_tracked_entities", 0)
+            lines.append(
+                f"Lifecycle: +{len(entered)} re+{len(reentered)} -{len(exited)} "
+                f"(active {active_count}/{tracked_count})"
+            )
+            lines.append(f"Entered: {self._render_entity_ids(entered)}")
+            lines.append(f"Exited: {self._render_entity_ids(exited)}")
         if self.context_controller is not None:
             lines.extend(
                 [
@@ -333,6 +548,7 @@ class LiveMarkovVisualizer:
         self.ax_info.text(0.0, 1.0, "\n".join(lines), va="top", family="monospace")
         self.ax_info.set_title("Step Diagnostics")
 
+        self._draw_entity_timeline(result)
         self.fig.tight_layout()
         self.plt.pause(0.001)
 
@@ -387,6 +603,14 @@ def parse_args():
         help=(
             "Optional JSON file mapping start window index to context label. "
             "Example: {\"0\":\"kitchen\", \"30\":\"street\"}"
+        ),
+    )
+    parser.add_argument(
+        "--entity-observations-by-window",
+        default=None,
+        help=(
+            "Optional JSON file mapping window index to entity observations. "
+            "Each entry may be a list of entity dicts or {\"entities\": [...]}."
         ),
     )
     parser.add_argument(
@@ -481,6 +705,15 @@ def parse_args():
         default="none",
         help="Live visualization mode.",
     )
+    parser.add_argument(
+        "--entity-missing-tolerance",
+        type=int,
+        default=0,
+        help=(
+            "Entity exits after this many consecutive unobserved windows "
+            "(0 exits immediately on first missed window)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -561,6 +794,46 @@ def _load_markov_context_options(markov_chain_path):
     return _unique_labels(values)
 
 
+def _load_entity_observation_schedule(path):
+    if not path:
+        return {}
+    with open(path, "r") as fp:
+        payload = json.load(fp)
+
+    out = {}
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            out[int(key)] = value
+        return out
+
+    if isinstance(payload, list):
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            if "window_index" not in item:
+                continue
+            out[int(item["window_index"])] = item.get("entities", item)
+        return out
+
+    return out
+
+
+def _resolve_entity_observations(schedule, window_idx, default_empty=False):
+    if not schedule:
+        return None
+    value = schedule.get(int(window_idx))
+    if value is None:
+        return [] if default_empty else None
+    if isinstance(value, dict):
+        entities = value.get("entities")
+        if isinstance(entities, list):
+            return entities
+        return [value]
+    if isinstance(value, list):
+        return value
+    return None
+
+
 def _parse_context_options(raw_value):
     if not raw_value:
         return []
@@ -602,6 +875,16 @@ def main():
     cfg.run_cfg.markov_debug = bool(args.debug_markov or args.visualize != "none")
 
     task = tasks.setup_task(cfg)
+    if hasattr(task, "entity_sequence_missing_tolerance"):
+        task.entity_sequence_missing_tolerance = max(0, int(args.entity_missing_tolerance))
+    if (
+        hasattr(task, "entity_sequence_tracker")
+        and task.entity_sequence_tracker is not None
+        and hasattr(task.entity_sequence_tracker, "default_missing_tolerance")
+    ):
+        task.entity_sequence_tracker.default_missing_tolerance = max(
+            0, int(args.entity_missing_tolerance)
+        )
     datasets = task.build_datasets(cfg)
     model = task.build_model(cfg)
     if args.checkpoint:
@@ -659,6 +942,9 @@ def main():
     next_infer_frame = chunk_frames
     window_idx = 0
     context_schedule = _load_context_schedule(args.ecological_context_by_window)
+    entity_observation_schedule = _load_entity_observation_schedule(
+        args.entity_observations_by_window
+    )
     context_options = _build_context_options(args, cfg, context_schedule)
     use_interactive_context = bool(args.interactive_context and args.visualize == "matplotlib")
     if args.interactive_context and args.visualize != "matplotlib":
@@ -732,6 +1018,14 @@ def main():
             }
             if ecological_context is not None:
                 sample[args.context_field] = [ecological_context]
+            entity_observations = _resolve_entity_observations(
+                entity_observation_schedule,
+                window_idx,
+                default_empty=(len(entity_observation_schedule) > 0),
+            )
+            if entity_observations is not None:
+                # Batch shape [B], each item is a per-window entity list.
+                sample["entity_observations"] = [entity_observations]
             sample = prepare_sample(sample, cuda_enabled=(device.type == "cuda"))
 
             with torch.no_grad():
@@ -760,6 +1054,11 @@ def main():
                 if context_controller is not None
                 else list(context_options)
             )
+            if entity_observations is not None:
+                if len(entity_observations) > 0:
+                    result["entity_observation_source"] = "window_schedule"
+                else:
+                    result["entity_observation_source"] = "window_schedule_empty"
 
             line = json.dumps(result)
             print(line, flush=True)

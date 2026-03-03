@@ -11,6 +11,11 @@ import numpy as np
 import torch
 
 import torch.distributed as dist
+from lavis.common.entity_event_sequence import (
+    EntityEventSequenceTracker,
+    normalize_observation_scores,
+    scores_from_event_predictions,
+)
 from lavis.common.dist_utils import main_process, is_dist_avail_and_initialized
 from lavis.common.event_markov import EventMarkovChain
 from lavis.common.event_observation import ObservationClassifierSet
@@ -45,6 +50,10 @@ class ClassificationTask(BaseTask):
         markov_topk=5,
         markov_context_field="ecological_context",
         markov_debug=False,
+        entity_default_id="__scene__",
+        entity_sequence_history=64,
+        entity_sequence_observation_topk=5,
+        entity_sequence_missing_tolerance=0,
     ):
         super().__init__()
 
@@ -67,11 +76,20 @@ class ClassificationTask(BaseTask):
         self.markov_topk = markov_topk
         self.markov_context_field = markov_context_field
         self.markov_debug = bool(markov_debug)
+        self.entity_default_id = str(entity_default_id)
+        self.entity_sequence_history = max(1, int(entity_sequence_history))
+        self.entity_sequence_observation_topk = max(
+            1, int(entity_sequence_observation_topk)
+        )
+        self.entity_sequence_missing_tolerance = max(
+            0, int(entity_sequence_missing_tolerance)
+        )
         self.default_candidate_labels = []
 
         self.event_taxonomy = None
         self.observation_classifier_set = None
         self.event_markov_chain = None
+        self.entity_sequence_tracker = None
 
         if event_taxonomy_path:
             try:
@@ -108,6 +126,16 @@ class ClassificationTask(BaseTask):
                     "Markov updates disabled."
                 )
 
+        self.entity_sequence_tracker = EntityEventSequenceTracker(
+            markov_chain=self.event_markov_chain,
+            context_field=self.markov_context_field,
+            history_limit=self.entity_sequence_history,
+            default_entity_id=self.entity_default_id,
+            default_markov_topk=self.markov_topk,
+            default_observation_topk=self.entity_sequence_observation_topk,
+            default_missing_tolerance=self.entity_sequence_missing_tolerance,
+        )
+
     @classmethod
     def setup_task(cls, cfg):
         run_cfg = cfg.run_cfg
@@ -130,6 +158,14 @@ class ClassificationTask(BaseTask):
         markov_topk = run_cfg.get("markov_topk", 5)
         markov_context_field = run_cfg.get("markov_context_field", "ecological_context")
         markov_debug = run_cfg.get("markov_debug", False)
+        entity_default_id = run_cfg.get("entity_default_id", "__scene__")
+        entity_sequence_history = run_cfg.get("entity_sequence_history", 64)
+        entity_sequence_observation_topk = run_cfg.get(
+            "entity_sequence_observation_topk", 5
+        )
+        entity_sequence_missing_tolerance = run_cfg.get(
+            "entity_sequence_missing_tolerance", 0
+        )
 
         report_metric = run_cfg.get("report_metric", True)
         return cls(
@@ -151,6 +187,10 @@ class ClassificationTask(BaseTask):
             markov_topk=markov_topk,
             markov_context_field=markov_context_field,
             markov_debug=markov_debug,
+            entity_default_id=entity_default_id,
+            entity_sequence_history=entity_sequence_history,
+            entity_sequence_observation_topk=entity_sequence_observation_topk,
+            entity_sequence_missing_tolerance=entity_sequence_missing_tolerance,
         )
 
     def build_datasets(self, cfg):
@@ -234,6 +274,94 @@ class ClassificationTask(BaseTask):
             return out[:batch_size]
         return [value] * batch_size
 
+    @staticmethod
+    def _normalize_entity_observations(value):
+        if value is None:
+            return []
+        if isinstance(value, dict):
+            if isinstance(value.get("entities"), list):
+                return [x for x in value.get("entities") if isinstance(x, dict)]
+            return [value]
+        if isinstance(value, (list, tuple)):
+            return [x for x in value if isinstance(x, dict)]
+        return []
+
+    def _entity_observation_scores(
+        self,
+        entity_item,
+        fallback_context,
+        fallback_question,
+        fallback_classifier_id,
+        fallback_event_predictions,
+        fallback_observation_scores,
+        fallback_candidate_event_ids,
+    ):
+        raw_obs = entity_item.get("observation_scores")
+        observation_scores = normalize_observation_scores(raw_obs)
+
+        entity_event_predictions = entity_item.get("event_predictions")
+        if not isinstance(entity_event_predictions, list):
+            entity_event_predictions = fallback_event_predictions
+
+        if len(observation_scores) > 0:
+            return observation_scores, entity_event_predictions
+
+        model_score_map = scores_from_event_predictions(entity_event_predictions)
+        candidate_event_ids = entity_item.get("candidate_event_ids")
+        if not isinstance(candidate_event_ids, list) or len(candidate_event_ids) == 0:
+            candidate_event_ids = [
+                pred.get("event_id")
+                for pred in entity_event_predictions
+                if isinstance(pred, dict) and pred.get("event_id")
+            ]
+        candidate_event_ids = [str(x) for x in candidate_event_ids if x]
+        if len(candidate_event_ids) == 0:
+            candidate_event_ids = list(fallback_candidate_event_ids)
+
+        if (
+            self.observation_classifier_set is not None
+            and len(candidate_event_ids) > 0
+            and len(entity_event_predictions) > 0
+        ):
+            obs_context = {
+                "image_id": entity_item.get("image_id", None),
+                "question": entity_item.get("question", fallback_question),
+                "classifier_id": entity_item.get(
+                    "classifier_id", fallback_classifier_id
+                ),
+                self.markov_context_field: entity_item.get(
+                    self.markov_context_field,
+                    entity_item.get("context", fallback_context),
+                ),
+                "event_predictions": entity_event_predictions,
+            }
+            try:
+                observation_scores = self.observation_classifier_set.score_events(
+                    base_context=obs_context,
+                    candidate_event_ids=candidate_event_ids,
+                    model_scores=model_score_map,
+                )
+            except Exception as exc:
+                logging.warning(
+                    f"Entity observation scoring failed for entity_id="
+                    f"{entity_item.get('entity_id', self.entity_default_id)}: {exc}. "
+                    "Falling back to model score map."
+                )
+                observation_scores = {}
+
+        if len(observation_scores) == 0:
+            if len(candidate_event_ids) > 0:
+                observation_scores = {
+                    event_id: float(model_score_map.get(event_id, 0.0))
+                    for event_id in candidate_event_ids
+                }
+            elif len(model_score_map) > 0:
+                observation_scores = {k: float(v) for k, v in model_score_map.items()}
+            else:
+                observation_scores = normalize_observation_scores(fallback_observation_scores)
+
+        return observation_scores, entity_event_predictions
+
     def valid_step(self, model, samples):
         if self.classification_mode == "rank":
             return self._valid_step_rank(model=model, samples=samples)
@@ -268,6 +396,11 @@ class ClassificationTask(BaseTask):
             samples.get(self.markov_context_field, None),
             len(image_ids),
         )
+        entity_observations_batch = self._normalize_batch_field(
+            samples.get("entity_observations", None),
+            len(image_ids),
+        )
+        has_explicit_entity_observations = "entity_observations" in samples
 
         classifier_ids = []
         prompts = []
@@ -336,12 +469,14 @@ class ClassificationTask(BaseTask):
                     }
                 )
 
+            base_sequence_id = self._infer_sequence_id(image_id)
+
             model_score_map = {
                 pred["event_id"]: pred["confidence"]
                 for pred in event_predictions
                 if pred.get("event_id")
             }
-            candidate_event_ids = [event_id for event_id in event_ids_i if event_id]
+            candidate_event_ids_i = [event_id for event_id in event_ids_i if event_id]
 
             observation_context = {
                 "image_id": image_id,
@@ -354,13 +489,13 @@ class ClassificationTask(BaseTask):
             if self.observation_classifier_set is not None:
                 observation_scores = self.observation_classifier_set.score_events(
                     base_context=observation_context,
-                    candidate_event_ids=candidate_event_ids,
+                    candidate_event_ids=candidate_event_ids_i,
                     model_scores=model_score_map,
                 )
             else:
                 observation_scores = {
                     event_id: float(model_score_map.get(event_id, 0.0))
-                    for event_id in candidate_event_ids
+                    for event_id in candidate_event_ids_i
                 }
 
             markov_sequence_id = None
@@ -368,7 +503,7 @@ class ClassificationTask(BaseTask):
             markov_state = None
             markov_debug = None
             if self.event_markov_chain is not None and len(observation_scores) > 0:
-                markov_sequence_id = self._infer_sequence_id(image_id)
+                markov_sequence_id = base_sequence_id
                 markov_context = {
                     self.markov_context_field: ecological_contexts[i],
                     "image_id": image_id,
@@ -406,6 +541,77 @@ class ClassificationTask(BaseTask):
                 for event_id, score in observation_score_items
             ]
 
+            tracker_window_context = {
+                self.markov_context_field: ecological_contexts[i],
+                "image_id": image_id,
+                "question": text_inputs[i],
+            }
+            self.entity_sequence_tracker.begin_window(
+                base_sequence_id=base_sequence_id,
+                context=tracker_window_context,
+                image_id=image_id,
+                question=text_inputs[i],
+                metadata={"classifier_id": classifier_ids[i]},
+            )
+
+            entity_items = self._normalize_entity_observations(entity_observations_batch[i])
+            if len(entity_items) == 0 and not has_explicit_entity_observations:
+                entity_items = [
+                    {
+                        "entity_id": self.entity_default_id,
+                        "observation_scores": observation_scores,
+                        "event_predictions": event_predictions,
+                        self.markov_context_field: ecological_contexts[i],
+                        "question": text_inputs[i],
+                    }
+                ]
+
+            entity_event_sequences = []
+            for entity_item in entity_items:
+                entity_obs_scores, entity_event_predictions = self._entity_observation_scores(
+                    entity_item=entity_item,
+                    fallback_context=ecological_contexts[i],
+                    fallback_question=text_inputs[i],
+                    fallback_classifier_id=classifier_ids[i],
+                    fallback_event_predictions=event_predictions,
+                    fallback_observation_scores=observation_scores,
+                    fallback_candidate_event_ids=candidate_event_ids_i,
+                )
+                if len(entity_obs_scores) == 0:
+                    continue
+
+                entity_context = {
+                    self.markov_context_field: entity_item.get(
+                        self.markov_context_field,
+                        entity_item.get("context", ecological_contexts[i]),
+                    ),
+                    "image_id": image_id,
+                    "question": entity_item.get("question", text_inputs[i]),
+                    "entity_id": entity_item.get("entity_id", self.entity_default_id),
+                }
+                entity_summary = self.entity_sequence_tracker.update_entity(
+                    base_sequence_id=base_sequence_id,
+                    entity_id=entity_item.get("entity_id", self.entity_default_id),
+                    observation_scores=entity_obs_scores,
+                    context=entity_context,
+                    image_id=image_id,
+                    question=entity_item.get("question", text_inputs[i]),
+                    metadata=entity_item.get("metadata", {}),
+                    markov_debug=self.markov_debug,
+                    markov_topk=self.markov_topk,
+                    observation_topk=self.entity_sequence_observation_topk,
+                )
+                if entity_summary is None:
+                    continue
+                if entity_event_predictions is not None:
+                    entity_summary["event_predictions"] = entity_event_predictions
+                entity_event_sequences.append(entity_summary)
+
+            entity_lifecycle = self.entity_sequence_tracker.finalize_window(
+                base_sequence_id=base_sequence_id,
+                missing_tolerance=self.entity_sequence_missing_tolerance,
+            )
+
             results.append(
                 {
                     "image_id": image_id,
@@ -419,6 +625,8 @@ class ClassificationTask(BaseTask):
                     "markov_posterior": markov_posterior,
                     "markov_state": markov_state,
                     "markov_debug": markov_debug,
+                    "entity_event_sequences": entity_event_sequences,
+                    "entity_lifecycle": entity_lifecycle,
                 }
             )
 
