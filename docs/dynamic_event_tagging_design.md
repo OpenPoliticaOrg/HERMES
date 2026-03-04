@@ -58,6 +58,10 @@ Current implemented capabilities:
 - Network-accessible gRPC runtime server with smoke validation:
   - `run_scripts/soc/grpc_server.sh`
   - `run_scripts/soc/grpc_smoke.sh`
+- Minimal web dashboard client for live threat/case status over gRPC:
+  - `run_scripts/soc/dashboard.sh`
+  - `run_scripts/soc/dashboard_smoke.sh`
+  - includes analyst case controls (`Ack`, `Confirm`, `Dismiss`) through gRPC case-management APIs.
 
 Current constraint:
 - Best quality entity lifecycle/sequence updates use externally provided

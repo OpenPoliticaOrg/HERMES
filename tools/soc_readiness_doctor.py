@@ -162,6 +162,23 @@ def _run_grpc_smoke(repo_root):
     return False, detail
 
 
+def _run_dashboard_smoke(repo_root):
+    smoke_script = repo_root / "tools" / "soc_dashboard_smoke.py"
+    if not smoke_script.exists():
+        return False, "dashboard smoke script missing"
+    proc = subprocess.run(
+        [sys.executable, str(smoke_script)],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode == 0:
+        return True, proc.stdout.strip()
+    detail = (proc.stdout.strip() + "\n" + proc.stderr.strip()).strip()
+    return False, detail
+
+
 def run_checks(args):
     root = Path(args.repo_root).resolve()
     results = []
@@ -194,6 +211,8 @@ def run_checks(args):
         "tools/soc_integration_probe.py",
         "tools/soc_grpc_server.py",
         "tools/soc_grpc_smoke.py",
+        "tools/soc_dashboard_client.py",
+        "tools/soc_dashboard_smoke.py",
         "data/soc/example_threat_taxonomy_v2.json",
         "data/soc/example_soc_runtime_config.json",
         "data/soc/example_onvif_inventory.json",
@@ -286,6 +305,16 @@ def run_checks(args):
                     fix="Run python tools/soc_grpc_smoke.py and inspect failures.",
                 )
             )
+            ok_dash, detail_dash = _run_dashboard_smoke(root)
+            results.append(
+                CheckResult(
+                    name="soc_dashboard_smoke_test",
+                    ok=ok_dash,
+                    severity="required",
+                    detail=detail_dash,
+                    fix="Run python tools/soc_dashboard_smoke.py and inspect failures.",
+                )
+            )
         else:
             reasons = []
             if not _module_exists("grpc"):
@@ -299,6 +328,15 @@ def run_checks(args):
                     severity="optional",
                     detail=f"skipped ({', '.join(reasons)})",
                     fix="Install grpcio and protoc, then run python tools/soc_grpc_smoke.py.",
+                )
+            )
+            results.append(
+                CheckResult(
+                    name="soc_dashboard_smoke_test",
+                    ok=False,
+                    severity="optional",
+                    detail=f"skipped ({', '.join(reasons)})",
+                    fix="Install grpcio and protoc, then run python tools/soc_dashboard_smoke.py.",
                 )
             )
 

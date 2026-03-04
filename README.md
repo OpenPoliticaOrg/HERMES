@@ -177,4 +177,8 @@ bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/integratio
 # SOC gRPC runtime server + smoke test
 bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_server.sh --host 127.0.0.1 --port 50051
 bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_smoke.sh --print-json
+
+# SOC web dashboard client + smoke
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/dashboard.sh --spawn-grpc-server --demo-stream
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/dashboard_smoke.sh --print-json
 ```

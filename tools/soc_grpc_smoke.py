@@ -293,6 +293,62 @@ def main():
             )
             report["checks"]["feedback_ingest"] = {"ok": True}
 
+            snap_req = pb2.RuntimeSnapshotRequest(max_items=5)
+            snap_resp = _call(
+                channel,
+                "/hermes.soc.v1.RuntimeStatusService/GetRuntimeSnapshot",
+                pb2.RuntimeSnapshotRequest.SerializeToString,
+                pb2.RuntimeSnapshotResponse.FromString,
+                snap_req,
+            )
+            if snap_resp.case_count < 1 or snap_resp.threat_event_count < 1:
+                raise RuntimeError(
+                    "Runtime snapshot did not include expected case/threat counts"
+                )
+            report["checks"]["runtime_snapshot"] = {
+                "profile_id": snap_resp.profile_id,
+                "case_count": int(snap_resp.case_count),
+                "threat_event_count": int(snap_resp.threat_event_count),
+                "backlog_total": int(snap_resp.backlog_total),
+            }
+
+            case_id = ""
+            if snap_resp.recent_cases:
+                case_id = str(snap_resp.recent_cases[0].case_id)
+            if not case_id:
+                raise RuntimeError("Runtime snapshot returned no case_id for case actions")
+
+            ack_resp = _call(
+                channel,
+                "/hermes.soc.v1.CaseManagementService/AcknowledgeCase",
+                pb2.CaseActionRequest.SerializeToString,
+                pb2.CaseActionResponse.FromString,
+                pb2.CaseActionRequest(
+                    case_id=case_id, analyst_id="analyst_smoke", reason="ack smoke"
+                ),
+            )
+            if ack_resp.status != "ok":
+                raise RuntimeError("AcknowledgeCase did not return ok")
+
+            confirm_resp = _call(
+                channel,
+                "/hermes.soc.v1.CaseManagementService/ConfirmCase",
+                pb2.CaseActionRequest.SerializeToString,
+                pb2.CaseActionResponse.FromString,
+                pb2.CaseActionRequest(
+                    case_id=case_id,
+                    analyst_id="analyst_smoke",
+                    reason="confirmed in grpc smoke",
+                ),
+            )
+            if confirm_resp.status != "ok" or confirm_resp.case.state != "confirmed":
+                raise RuntimeError("ConfirmCase did not transition case to confirmed")
+            report["checks"]["case_actions"] = {
+                "case_id": case_id,
+                "ack_state": ack_resp.case.state,
+                "confirm_state": confirm_resp.case.state,
+            }
+
         report["status"] = "ok"
         if args.print_json:
             print(json.dumps(report, indent=2, sort_keys=True))

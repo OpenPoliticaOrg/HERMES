@@ -13,7 +13,7 @@ This document maps the roadmap to concrete code added in this repository.
     - `PTZControlProxy` (read-only)
 - **Kubernetes-core compatible service layer contracts**
   - `docs/proto/hermes_soc_services.proto`
-  - service interfaces: `IngestGatewayService`, `InferenceProfileService`, `EntityFusionService`, `ThreatScoringService`, `AlertDispatchService`, `FeedbackIngestService`
+  - service interfaces: `IngestGatewayService`, `InferenceProfileService`, `EntityFusionService`, `ThreatScoringService`, `AlertDispatchService`, `FeedbackIngestService`, `CaseManagementService`, `RuntimeStatusService`
   - concrete local handlers: `lavis/common/soc/runtime_services.py` (`SOCRuntimeServiceSuite`)
 - **Message fabric subject conventions (NATS JetStream aligned)**
   - `lavis/common/soc/routing.py`
@@ -167,6 +167,9 @@ This document maps the roadmap to concrete code added in this repository.
 - gRPC runtime server + smoke:
   - `tools/soc_grpc_server.py`
   - `tools/soc_grpc_smoke.py`
+- Web dashboard client + smoke:
+  - `tools/soc_dashboard_client.py`
+  - `tools/soc_dashboard_smoke.py`
 - Runtime service + probe docs:
   - `docs/soc_runtime_services_and_integration_probe.md`
 - Run scripts:
@@ -179,6 +182,8 @@ This document maps the roadmap to concrete code added in this repository.
   - `run_scripts/soc/integration_probe.sh`
   - `run_scripts/soc/grpc_server.sh`
   - `run_scripts/soc/grpc_smoke.sh`
+  - `run_scripts/soc/dashboard.sh`
+  - `run_scripts/soc/dashboard_smoke.sh`
 
 ## What is intentionally phase-1 (not fully production-complete yet)
 - ONVIF/VMS adapters are interface-level + static inventory sync stubs, not full vendor SDK coverage.
@@ -225,6 +230,12 @@ bash run_scripts/soc/grpc_server.sh --host 127.0.0.1 --port 50051
 
 # Validate gRPC endpoints end-to-end
 bash run_scripts/soc/grpc_smoke.sh --print-json
+
+# Run minimal dashboard (spawns gRPC server + demo stream)
+bash run_scripts/soc/dashboard.sh --spawn-grpc-server --demo-stream
+
+# Dashboard smoke validation
+bash run_scripts/soc/dashboard_smoke.sh --print-json
 ```
 
 ## Acceptance-test coverage included in smoke
@@ -240,3 +251,4 @@ bash run_scripts/soc/grpc_smoke.sh --print-json
 - Runtime service-handler flow (ingest/profile/fusion/threat/dispatch/feedback)
 - External integration probe for configured production adapters
 - gRPC service endpoint flow over network channel
+- Dashboard client polling runtime snapshot API with live threat/case tables

@@ -17,6 +17,8 @@ Service suite:
   - `threat_scoring` (`ThreatScoringRuntimeService`)
   - `alert_dispatch` (`AlertDispatchRuntimeService`)
   - `feedback_ingest` (`FeedbackIngestRuntimeService`)
+  - `case_management` (`CaseManagementRuntimeService`) for `ack`/`confirm`/`dismiss`
+  - `runtime_status` (`RuntimeStatusRuntimeService`)
 
 Notes:
 - Interfaces align with `docs/proto/hermes_soc_services.proto`.
@@ -40,6 +42,28 @@ Design:
 Smoke:
 ```bash
 bash run_scripts/soc/grpc_smoke.sh --print-json
+```
+
+## Minimal web dashboard client
+Implementation:
+- `tools/soc_dashboard_client.py`
+
+Capabilities:
+- polls gRPC `RuntimeStatusService/GetRuntimeSnapshot`
+- renders live case/threat/backlog cards and tables
+- supports manual demo ingest button (`Inject Demo Event`)
+- supports analyst case actions from UI (`Ack`, `Confirm`, `Dismiss`) via gRPC
+- optional continuous demo ingestion
+
+Run:
+```bash
+# one command local demo (spawns gRPC server and injects demo events)
+bash run_scripts/soc/dashboard.sh --spawn-grpc-server --demo-stream
+```
+
+Dashboard smoke:
+```bash
+bash run_scripts/soc/dashboard_smoke.sh --print-json
 ```
 
 ## Guardrail behavior surfaced by services/runtime

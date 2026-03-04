@@ -195,6 +195,60 @@ def _pb_threat_to_dict(msg):
     }
 
 
+def _dict_to_pb_runtime_snapshot(payload, pb2):
+    payload = payload if isinstance(payload, dict) else {}
+    out = pb2.RuntimeSnapshotResponse()
+    out.timestamp_utc = str(payload.get("timestamp_utc", ""))
+    out.site_id = str(payload.get("site_id", ""))
+    out.camera_id = str(payload.get("camera_id", ""))
+    out.profile_id = str(payload.get("profile_id", ""))
+    out.threat_event_count = int(payload.get("threat_event_count", 0))
+    out.case_count = int(payload.get("case_count", 0))
+    out.backlog_total = int(payload.get("backlog_total", 0))
+    out.dead_letter_count = int(payload.get("dead_letter_count", 0))
+    out.congested = bool(payload.get("congested", False))
+
+    for item in payload.get("recent_threats", []):
+        item = item if isinstance(item, dict) else {}
+        row = out.recent_threats.add()
+        row.threat_type = str(item.get("threat_type", ""))
+        row.severity = str(item.get("severity", ""))
+        row.confidence_calibrated = float(item.get("confidence_calibrated", 0.0))
+        row.timestamp_utc = str(item.get("timestamp_utc", ""))
+        row.site_id = str(item.get("site_id", ""))
+        row.entity_ref = str(item.get("entity_ref", ""))
+        row.policy_action = str(item.get("policy_action", ""))
+
+    for item in payload.get("recent_cases", []):
+        item = item if isinstance(item, dict) else {}
+        row = out.recent_cases.add()
+        row.case_id = str(item.get("case_id", ""))
+        row.state = str(item.get("state", ""))
+        row.severity = str(item.get("severity", ""))
+        row.threat_type = str(item.get("threat_type", ""))
+        row.confidence = float(item.get("confidence", 0.0))
+        row.created_at_utc = str(item.get("created_at_utc", ""))
+        row.updated_at_utc = str(item.get("updated_at_utc", ""))
+    return out
+
+
+def _dict_to_pb_case_action_response(payload, pb2):
+    payload = payload if isinstance(payload, dict) else {}
+    out = pb2.CaseActionResponse()
+    out.status = str(payload.get("status", "error"))
+    out.error = str(payload.get("error", ""))
+    case = payload.get("case", {})
+    if isinstance(case, dict):
+        out.case.case_id = str(case.get("case_id", ""))
+        out.case.state = str(case.get("state", ""))
+        out.case.severity = str(case.get("severity", ""))
+        out.case.threat_type = str(case.get("threat_type", ""))
+        out.case.confidence = float(case.get("confidence", 0.0))
+        out.case.created_at_utc = str(case.get("created_at_utc", ""))
+        out.case.updated_at_utc = str(case.get("updated_at_utc", ""))
+    return out
+
+
 def build_server(repo_root, soc_config_path, pb2, max_workers):
     modules = _load_soc_modules(repo_root)
     runtime_mod = modules["runtime"]
@@ -283,6 +337,62 @@ def build_server(repo_root, soc_config_path, pb2, max_workers):
                 )
             return pb2.Empty()
 
+    class RuntimeStatusServicer:
+        def GetRuntimeSnapshot(self, request, context):
+            payload = {"max_items": int(request.max_items or 10)}
+            try:
+                snapshot = suite.runtime_status.get_runtime_snapshot(payload)
+            except Exception as exc:
+                context.abort(
+                    grpc.StatusCode.INTERNAL, f"runtime snapshot failed: {exc}"
+                )
+            return _dict_to_pb_runtime_snapshot(snapshot, pb2)
+
+    class CaseManagementServicer:
+        @staticmethod
+        def _payload(request):
+            return {
+                "case_id": request.case_id,
+                "analyst_id": request.analyst_id,
+                "reason": request.reason,
+            }
+
+        def AcknowledgeCase(self, request, context):
+            try:
+                out = suite.case_management.acknowledge_case(self._payload(request))
+            except Exception as exc:
+                context.abort(grpc.StatusCode.INTERNAL, f"ack case failed: {exc}")
+            if (out or {}).get("status") != "ok":
+                context.abort(
+                    grpc.StatusCode.INVALID_ARGUMENT,
+                    f"ack case failed: {(out or {}).get('error', 'unknown')}",
+                )
+            return _dict_to_pb_case_action_response(out, pb2)
+
+        def ConfirmCase(self, request, context):
+            try:
+                out = suite.case_management.confirm_case(self._payload(request))
+            except Exception as exc:
+                context.abort(grpc.StatusCode.INTERNAL, f"confirm case failed: {exc}")
+            if (out or {}).get("status") != "ok":
+                context.abort(
+                    grpc.StatusCode.INVALID_ARGUMENT,
+                    f"confirm case failed: {(out or {}).get('error', 'unknown')}",
+                )
+            return _dict_to_pb_case_action_response(out, pb2)
+
+        def DismissCase(self, request, context):
+            try:
+                out = suite.case_management.dismiss_case(self._payload(request))
+            except Exception as exc:
+                context.abort(grpc.StatusCode.INTERNAL, f"dismiss case failed: {exc}")
+            if (out or {}).get("status") != "ok":
+                context.abort(
+                    grpc.StatusCode.INVALID_ARGUMENT,
+                    f"dismiss case failed: {(out or {}).get('error', 'unknown')}",
+                )
+            return _dict_to_pb_case_action_response(out, pb2)
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
 
     server.add_generic_rpc_handlers(
@@ -345,6 +455,36 @@ def build_server(repo_root, soc_config_path, pb2, max_workers):
                         request_deserializer=pb2.FeedbackIngestRequest.FromString,
                         response_serializer=pb2.Empty.SerializeToString,
                     )
+                },
+            ),
+            grpc.method_handlers_generic_handler(
+                "hermes.soc.v1.RuntimeStatusService",
+                {
+                    "GetRuntimeSnapshot": grpc.unary_unary_rpc_method_handler(
+                        RuntimeStatusServicer().GetRuntimeSnapshot,
+                        request_deserializer=pb2.RuntimeSnapshotRequest.FromString,
+                        response_serializer=pb2.RuntimeSnapshotResponse.SerializeToString,
+                    )
+                },
+            ),
+            grpc.method_handlers_generic_handler(
+                "hermes.soc.v1.CaseManagementService",
+                {
+                    "AcknowledgeCase": grpc.unary_unary_rpc_method_handler(
+                        CaseManagementServicer().AcknowledgeCase,
+                        request_deserializer=pb2.CaseActionRequest.FromString,
+                        response_serializer=pb2.CaseActionResponse.SerializeToString,
+                    ),
+                    "ConfirmCase": grpc.unary_unary_rpc_method_handler(
+                        CaseManagementServicer().ConfirmCase,
+                        request_deserializer=pb2.CaseActionRequest.FromString,
+                        response_serializer=pb2.CaseActionResponse.SerializeToString,
+                    ),
+                    "DismissCase": grpc.unary_unary_rpc_method_handler(
+                        CaseManagementServicer().DismissCase,
+                        request_deserializer=pb2.CaseActionRequest.FromString,
+                        response_serializer=pb2.CaseActionResponse.SerializeToString,
+                    ),
                 },
             ),
         )

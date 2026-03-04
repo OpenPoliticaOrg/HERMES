@@ -45,6 +45,21 @@ bash run_scripts/soc/grpc_server.sh --host 127.0.0.1 --port 50051
 bash run_scripts/soc/grpc_smoke.sh --print-json
 ```
 
+## 10) Minimal web dashboard client
+```bash
+# one command: spawn gRPC server + open dashboard stream
+bash run_scripts/soc/dashboard.sh --spawn-grpc-server --demo-stream
+```
+
+Dashboard analyst controls:
+- set analyst id in the input box
+- per-case actions: `Ack`, `Confirm`, `Dismiss` (executed via gRPC case-management endpoints)
+
+## 11) Dashboard smoke test
+```bash
+bash run_scripts/soc/dashboard_smoke.sh --print-json
+```
+
 Arguments for `coordination_test.sh`:
 1. `steps` (default `24`)
 2. `cameras` (default `cam_a01,cam_a02,cam_a03`)

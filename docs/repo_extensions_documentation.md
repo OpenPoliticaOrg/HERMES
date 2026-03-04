@@ -317,6 +317,8 @@ Implemented capabilities:
   - filesystem clip store
 - Cross-camera metadata federation for global entity continuity.
 - Live stream integration (`stream_online.py`) with SOC output fields.
+- Runtime snapshot API (`RuntimeStatusService`) for external dashboard clients.
+- Analyst case-action API (`CaseManagementService`) for `ack`/`confirm`/`dismiss`.
 
 SOC runbook:
 
@@ -345,6 +347,10 @@ bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/integratio
 # gRPC runtime server + smoke test
 bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_server.sh --host 127.0.0.1 --port 50051
 bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_smoke.sh --print-json
+
+# Web dashboard client (spawns gRPC server + demo stream)
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/dashboard.sh --spawn-grpc-server --demo-stream
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/dashboard_smoke.sh --print-json
 ```
 
 Supporting docs:

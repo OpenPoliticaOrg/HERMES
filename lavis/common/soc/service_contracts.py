@@ -37,3 +37,23 @@ class FeedbackIngestService(ABC):
     @abstractmethod
     def ingest_feedback(self, request):
         pass
+
+
+class CaseManagementService(ABC):
+    @abstractmethod
+    def acknowledge_case(self, request):
+        pass
+
+    @abstractmethod
+    def confirm_case(self, request):
+        pass
+
+    @abstractmethod
+    def dismiss_case(self, request):
+        pass
+
+
+class RuntimeStatusService(ABC):
+    @abstractmethod
+    def get_runtime_snapshot(self, request):
+        pass

@@ -161,6 +161,31 @@ def main():
     if feedback_resp.get("status") != "ok":
         fail("feedback ingest failed.")
 
+    ack_resp = suite.case_management.acknowledge_case(
+        {
+            "case_id": case_id,
+            "analyst_id": "analyst_42",
+            "reason": "ack in services smoke",
+        }
+    )
+    if ack_resp.get("status") != "ok":
+        fail("case acknowledge failed.")
+    confirm_resp = suite.case_management.confirm_case(
+        {
+            "case_id": case_id,
+            "analyst_id": "analyst_42",
+            "reason": "confirm in services smoke",
+        }
+    )
+    if confirm_resp.get("status") != "ok":
+        fail("case confirm failed.")
+
+    snapshot_resp = suite.runtime_status.get_runtime_snapshot({"max_items": 5})
+    if int(snapshot_resp.get("case_count", 0)) < 1:
+        fail("runtime status snapshot did not report cases.")
+    if int(snapshot_resp.get("threat_event_count", 0)) < 1:
+        fail("runtime status snapshot did not report threat events.")
+
     report = {
         "status": "ok",
         "profile": profile_resp,
@@ -173,6 +198,9 @@ def main():
         "threat_score": score_resp,
         "dispatch": dispatch_resp,
         "feedback": feedback_resp,
+        "case_ack": ack_resp,
+        "case_confirm": confirm_resp,
+        "runtime_snapshot": snapshot_resp,
     }
     if args.print_json:
         print(json.dumps(report, indent=2, sort_keys=True))

@@ -6,10 +6,12 @@ from .routing import NATS_SUBJECTS
 from .schemas import EntityTrackEvent, ThreatEvent, utc_now_iso
 from .service_contracts import (
     AlertDispatchService as AlertDispatchServiceContract,
+    CaseManagementService as CaseManagementServiceContract,
     EntityFusionService as EntityFusionServiceContract,
     FeedbackIngestService as FeedbackIngestServiceContract,
     InferenceProfileServiceContract,
     IngestGatewayService as IngestGatewayServiceContract,
+    RuntimeStatusService as RuntimeStatusServiceContract,
     ThreatScoringService as ThreatScoringServiceContract,
 )
 
@@ -23,6 +25,19 @@ def _safe_float(value, default=0.0):
 
 def _as_dict(value):
     return value if isinstance(value, dict) else {}
+
+
+def _to_case_summary(case):
+    case = _as_dict(case)
+    return {
+        "case_id": str(case.get("case_id", "")),
+        "state": str(case.get("state", "")),
+        "severity": str(case.get("severity", "")),
+        "threat_type": str(case.get("threat_type", "")),
+        "confidence": _safe_float(case.get("confidence", 0.0), 0.0),
+        "created_at_utc": str(case.get("created_at_utc", "")),
+        "updated_at_utc": str(case.get("updated_at_utc", "")),
+    }
 
 
 def _to_entity_track_event(payload, default_site_id, default_camera_id):
@@ -300,6 +315,146 @@ class FeedbackIngestRuntimeService(FeedbackIngestServiceContract):
         return {"status": "ok", "feedback": feedback}
 
 
+class CaseManagementRuntimeService(CaseManagementServiceContract):
+    def __init__(self, orchestrator):
+        self.orchestrator = orchestrator
+
+    def _actor(self, request):
+        request = _as_dict(request)
+        return str(request.get("analyst_id", "analyst_dashboard"))
+
+    @staticmethod
+    def _case_id(request):
+        request = _as_dict(request)
+        return str(request.get("case_id", "")).strip()
+
+    @staticmethod
+    def _reason(request):
+        request = _as_dict(request)
+        return str(request.get("reason", "")).strip()
+
+    def acknowledge_case(self, request):
+        case_id = self._case_id(request)
+        if not case_id:
+            return {"status": "error", "error": "missing_case_id"}
+        case = self.orchestrator.workflow_service.acknowledge(
+            case_id=case_id, actor=self._actor(request)
+        )
+        if case is None:
+            return {"status": "error", "error": "case_not_found"}
+        return {"status": "ok", "case": _to_case_summary(case)}
+
+    def confirm_case(self, request):
+        case_id = self._case_id(request)
+        if not case_id:
+            return {"status": "error", "error": "missing_case_id"}
+        reason = self._reason(request)
+        case = self.orchestrator.workflow_service.transition(
+            case_id=case_id,
+            new_state="confirmed",
+            actor=self._actor(request),
+            reason=reason if reason else None,
+        )
+        if case is None:
+            return {"status": "error", "error": "transition_failed"}
+        return {"status": "ok", "case": _to_case_summary(case)}
+
+    def dismiss_case(self, request):
+        case_id = self._case_id(request)
+        if not case_id:
+            return {"status": "error", "error": "missing_case_id"}
+        reason = self._reason(request)
+        case = self.orchestrator.workflow_service.transition(
+            case_id=case_id,
+            new_state="dismissed",
+            actor=self._actor(request),
+            reason=reason if reason else None,
+        )
+        if case is None:
+            return {"status": "error", "error": "transition_failed"}
+        return {"status": "ok", "case": _to_case_summary(case)}
+
+
+class RuntimeStatusRuntimeService(RuntimeStatusServiceContract):
+    def __init__(self, orchestrator):
+        self.orchestrator = orchestrator
+
+    @staticmethod
+    def _safe_int(value, default=0):
+        try:
+            return int(value)
+        except Exception:
+            return int(default)
+
+    def get_runtime_snapshot(self, request):
+        request = _as_dict(request)
+        max_items = max(1, min(100, self._safe_int(request.get("max_items", 10), 10)))
+
+        routing_metrics = self.orchestrator.routing_service.metrics()
+        workflow = self.orchestrator.workflow_service.snapshot()
+
+        cases = workflow.get("cases", []) if isinstance(workflow, dict) else []
+        recent_cases = list(cases)[-max_items:]
+        case_summaries = []
+        for case in reversed(recent_cases):
+            case_summaries.append(_to_case_summary(case))
+
+        threat_items = []
+        threat_event_count = 0
+        if self.orchestrator.event_store is not None:
+            try:
+                threat_items = self.orchestrator.event_store.query_recent(
+                    "threat_events", limit=max_items
+                )
+            except Exception:
+                threat_items = []
+            try:
+                threat_event_count = len(
+                    self.orchestrator.event_store.query_recent(
+                        "threat_events", limit=100000
+                    )
+                )
+            except Exception:
+                threat_event_count = len(threat_items)
+
+        recent_threats = []
+        for item in reversed(threat_items):
+            item = _as_dict(item)
+            entity_refs = item.get("entity_refs", [])
+            entity_ref = str(entity_refs[0]) if isinstance(entity_refs, list) and entity_refs else ""
+            recent_threats.append(
+                {
+                    "threat_type": str(item.get("threat_type", "")),
+                    "severity": str(item.get("severity", "")),
+                    "confidence_calibrated": _safe_float(
+                        item.get("confidence_calibrated", 0.0), 0.0
+                    ),
+                    "timestamp_utc": str(item.get("timestamp_utc", "")),
+                    "site_id": str(item.get("site_id", self.orchestrator.site_id)),
+                    "entity_ref": entity_ref,
+                    "policy_action": str(item.get("policy_action", "")),
+                }
+            )
+
+        return {
+            "timestamp_utc": utc_now_iso(),
+            "site_id": self.orchestrator.site_id,
+            "camera_id": self.orchestrator.camera_id,
+            "profile_id": (
+                self.orchestrator.active_profile.profile_id
+                if self.orchestrator.active_profile is not None
+                else ""
+            ),
+            "threat_event_count": int(threat_event_count),
+            "case_count": int(len(cases)),
+            "backlog_total": int(routing_metrics.get("backlog_total", 0)),
+            "dead_letter_count": int(routing_metrics.get("backlog_dead_letter", 0)),
+            "congested": bool(routing_metrics.get("congested", False)),
+            "recent_threats": recent_threats,
+            "recent_cases": case_summaries,
+        }
+
+
 class SOCRuntimeServiceSuite:
     """Convenience wrapper bundling concrete runtime services."""
 
@@ -311,6 +466,8 @@ class SOCRuntimeServiceSuite:
         self.threat_scoring = ThreatScoringRuntimeService(orchestrator)
         self.alert_dispatch = AlertDispatchRuntimeService(orchestrator)
         self.feedback_ingest = FeedbackIngestRuntimeService(orchestrator)
+        self.case_management = CaseManagementRuntimeService(orchestrator)
+        self.runtime_status = RuntimeStatusRuntimeService(orchestrator)
 
     @classmethod
     def from_json_config(cls, path):
@@ -326,4 +483,6 @@ class SOCRuntimeServiceSuite:
             "threat_scoring": self.threat_scoring,
             "alert_dispatch": self.alert_dispatch,
             "feedback_ingest": self.feedback_ingest,
+            "case_management": self.case_management,
+            "runtime_status": self.runtime_status,
         }

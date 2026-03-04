@@ -43,10 +43,12 @@ from lavis.common.soc.routing import (
 from lavis.common.soc.runtime import SOCOrchestrator
 from lavis.common.soc.runtime_services import (
     AlertDispatchRuntimeService,
+    CaseManagementRuntimeService,
     EntityFusionRuntimeService,
     FeedbackIngestRuntimeService,
     InferenceProfileRuntimeService,
     IngestGatewayRuntimeService,
+    RuntimeStatusRuntimeService,
     SOCRuntimeServiceSuite,
     ThreatScoringRuntimeService,
 )
@@ -84,6 +86,7 @@ __all__ = [
     "CameraProfile",
     "CameraSourceProvider",
     "CanaryRolloutManager",
+    "CaseManagementRuntimeService",
     "ClickHouseEventStore",
     "ClipExporter",
     "ConfidenceCalibrator",
@@ -115,6 +118,7 @@ __all__ = [
     "RedisHotStateStore",
     "ReIDModel",
     "RolloutGuardrailPolicy",
+    "RuntimeStatusRuntimeService",
     "RuntimeRoutingPolicyService",
     "SOCRuntimeServiceSuite",
     "SLOMonitor",

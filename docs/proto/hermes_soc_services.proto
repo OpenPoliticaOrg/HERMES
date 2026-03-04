@@ -83,6 +83,56 @@ message FeedbackIngestRequest {
   string notes = 4;
 }
 
+message CaseActionRequest {
+  string case_id = 1;
+  string analyst_id = 2;
+  string reason = 3;
+}
+
+message CaseActionResponse {
+  string status = 1;
+  string error = 2;
+  CaseSummary case = 3;
+}
+
+message RuntimeSnapshotRequest {
+  int32 max_items = 1;
+}
+
+message ThreatSummary {
+  string threat_type = 1;
+  string severity = 2;
+  float confidence_calibrated = 3;
+  string timestamp_utc = 4;
+  string site_id = 5;
+  string entity_ref = 6;
+  string policy_action = 7;
+}
+
+message CaseSummary {
+  string case_id = 1;
+  string state = 2;
+  string severity = 3;
+  string threat_type = 4;
+  float confidence = 5;
+  string created_at_utc = 6;
+  string updated_at_utc = 7;
+}
+
+message RuntimeSnapshotResponse {
+  string timestamp_utc = 1;
+  string site_id = 2;
+  string camera_id = 3;
+  string profile_id = 4;
+  int32 threat_event_count = 5;
+  int32 case_count = 6;
+  int32 backlog_total = 7;
+  int32 dead_letter_count = 8;
+  bool congested = 9;
+  repeated ThreatSummary recent_threats = 10;
+  repeated CaseSummary recent_cases = 11;
+}
+
 service IngestGatewayService {
   rpc IngestObservation(IngestObservationRequest) returns (Empty);
 }
@@ -105,4 +155,14 @@ service AlertDispatchService {
 
 service FeedbackIngestService {
   rpc IngestFeedback(FeedbackIngestRequest) returns (Empty);
+}
+
+service CaseManagementService {
+  rpc AcknowledgeCase(CaseActionRequest) returns (CaseActionResponse);
+  rpc ConfirmCase(CaseActionRequest) returns (CaseActionResponse);
+  rpc DismissCase(CaseActionRequest) returns (CaseActionResponse);
+}
+
+service RuntimeStatusService {
+  rpc GetRuntimeSnapshot(RuntimeSnapshotRequest) returns (RuntimeSnapshotResponse);
 }
