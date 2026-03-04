@@ -1,0 +1,178 @@
+{
+  "site_id": "site_west_01",
+  "camera_id": "cam_a01",
+  "context_field": "ecological_context",
+  "threat_taxonomy_path": "data/soc/example_threat_taxonomy_v2.json",
+  "observation_source_default": "detector_tracker",
+  "routing": {
+    "max_backlog": 6000,
+    "congestion_soft_limit": 3500,
+    "max_retries": 3,
+    "priority_drop_threshold": 60
+  },
+  "ingestion_health": {
+    "expected_fps": 10.0,
+    "fps_window": 60,
+    "drop_timeout_seconds": 5.0,
+    "max_timestamp_skew_seconds": 2.0,
+    "max_fps_drift_ratio": 0.35
+  },
+  "confidence_calibration": {
+    "method": "temperature",
+    "temperature": 1.15,
+    "isotonic_points": []
+  },
+  "entity_federation": {
+    "max_time_delta_seconds": 25.0,
+    "min_embedding_similarity": 0.85
+  },
+  "integrations": {
+    "message_bus": {
+      "type": "in_memory",
+      "servers": [
+        "nats://127.0.0.1:4222"
+      ],
+      "stream_name": "HERMES"
+    },
+    "hot_store": {
+      "type": "in_memory",
+      "url": "redis://127.0.0.1:6379/0",
+      "key_prefix": "hermes:soc"
+    },
+    "event_store": {
+      "type": "in_memory",
+      "max_events_per_table": 20000,
+      "host": "127.0.0.1",
+      "port": 8123,
+      "username": "default",
+      "password": "",
+      "database": "default"
+    },
+    "clip_store": {
+      "type": "filesystem",
+      "root_dir": "logs/soc_clips"
+    }
+  },
+  "security": {
+    "service_account_id": "svc_soc_runtime",
+    "transport": {
+      "mtls_internal": false,
+      "tls_external": false,
+      "cert_path": "",
+      "key_path": "",
+      "ca_path": ""
+    },
+    "rbac": {
+      "roles": {
+        "soc_runtime": [
+          "emit:video_obs_raw",
+          "emit:entity_track",
+          "emit:event_posterior",
+          "emit:threat_candidate",
+          "emit:case_update",
+          "emit:bus_publish",
+          "store:hot_state",
+          "store:event",
+          "store:clip",
+          "monitor:drift",
+          "monitor:slo",
+          "audit:write"
+        ],
+        "soc_admin": [
+          "*"
+        ]
+      },
+      "service_accounts": {
+        "svc_soc_runtime": {
+          "role": "soc_runtime",
+          "sites": [
+            "*"
+          ]
+        }
+      }
+    }
+  },
+  "mlops": {
+    "model_registry": {
+      "signing_key": "demo_signing_key"
+    },
+    "bootstrap_models": [
+      {
+        "model_id": "hermes_context_ranker",
+        "version": "v1.0.0",
+        "artifact_path": "data/soc/example_threat_taxonomy_v2.json",
+        "metadata": {
+          "profile": "edge_cpu_profile",
+          "task": "contextual_event_ranking"
+        }
+      }
+    ],
+    "canary_rollout": {
+      "default_ratio": 0.2,
+      "active_rollout": "soc_profile_rollout_001",
+      "rollouts": [
+        {
+          "rollout_id": "soc_profile_rollout_001",
+          "baseline_profile": "edge_cpu_profile",
+          "canary_profile": "edge_gpu_profile",
+          "canary_ratio": 0.2
+        }
+      ]
+    },
+    "drift_monitor": {
+      "class_window": 200,
+      "embedding_window": 200,
+      "alert_window": 300,
+      "class_drift_threshold": 0.12,
+      "embedding_drift_threshold": 0.30,
+      "alert_z_threshold": 3.0
+    },
+    "slo_monitor": {
+      "latency_window": 500,
+      "target_p95_latency_gpu_s": 2.0,
+      "target_p95_latency_cpu_s": 4.0,
+      "error_budget": 0.01
+    },
+    "guardrails": {
+      "enabled": true,
+      "consecutive_alarm_windows": 3,
+      "min_samples_for_slo": 32,
+      "rollback_on_drift": true,
+      "rollback_on_slo": true,
+      "drift_alarm_fields": [
+        "class_prior_drift_alarm",
+        "embedding_drift_alarm",
+        "alert_volume_alarm"
+      ],
+      "slo_alarm_fields": [
+        "latency_alarm",
+        "availability_alarm"
+      ],
+      "max_rollback_history": 64
+    }
+  },
+  "sla_seconds_by_severity": {
+    "critical": 30,
+    "high": 120,
+    "medium": 300,
+    "low": 900,
+    "info": 1800
+  },
+  "runbooks": {
+    "critical": [
+      "Validate alert evidence and second-source camera corroboration",
+      "Escalate to site security lead and SOC incident commander",
+      "Create incident bridge and notify external responders"
+    ],
+    "high": [
+      "Perform analyst confirmation and clip validation",
+      "Notify local site operations lead",
+      "Track acknowledgment SLA"
+    ],
+    "medium": [
+      "Queue for analyst review",
+      "Collect contextual notes",
+      "Request additional camera handoff if needed"
+    ]
+  }
+}

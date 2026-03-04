@@ -17,7 +17,9 @@ python stream_online.py \
 import argparse
 import json
 import logging
+import os
 from collections import deque
+from datetime import datetime, timezone
 
 import numpy as np
 import torch
@@ -25,6 +27,8 @@ import torch
 import lavis.tasks as tasks
 from lavis.common.config import Config
 from lavis.common.entity_observation_adapter import MotionEntityObservationAdapter
+from lavis.common.soc.runtime import SOCOrchestrator
+from lavis.common.soc.threat_intel import ThreatTaxonomyV2
 from lavis.datasets.data_utils import prepare_sample
 
 # imports modules for registration
@@ -541,6 +545,65 @@ class LiveMarkovVisualizer:
             )
             lines.append(f"Entered: {self._render_entity_ids(entered)}")
             lines.append(f"Exited: {self._render_entity_ids(exited)}")
+        soc_threats = result.get("soc_threat_events") or []
+        if soc_threats:
+            top_threat = max(
+                soc_threats,
+                key=lambda x: float(x.get("confidence_calibrated", 0.0)),
+            )
+            lines.append(
+                "SOC Threats: "
+                f"{len(soc_threats)} top={top_threat.get('threat_type', '-')}"
+                f"({float(top_threat.get('confidence_calibrated', 0.0)):.2f}, "
+                f"{top_threat.get('severity', '-')})"
+            )
+        soc_routing = result.get("soc_routing_metrics") or {}
+        if soc_routing:
+            lines.append(
+                "SOC Queue: "
+                f"{soc_routing.get('backlog_total', 0)} "
+                f"(DLQ {soc_routing.get('backlog_dead_letter', 0)})"
+            )
+        soc_health = result.get("soc_ingestion_health") or {}
+        if soc_health:
+            lines.append(
+                "SOC Health: "
+                f"fps={float(soc_health.get('fps_estimate', 0.0)):.2f} "
+                f"drift_alarm={bool(soc_health.get('fps_drift_alarm', False))} "
+                f"skew_alarm={bool(soc_health.get('timestamp_skew_alarm', False))}"
+            )
+        soc_drift = result.get("soc_drift_metrics") or {}
+        if soc_drift:
+            lines.append(
+                "SOC Drift: "
+                f"class={float(soc_drift.get('class_prior_drift', 0.0)):.3f} "
+                f"emb={float(soc_drift.get('embedding_drift', 0.0)):.3f} "
+                f"alert_z={float(soc_drift.get('alert_volume_zscore', 0.0)):.2f}"
+            )
+        soc_slo = result.get("soc_slo_metrics") or {}
+        if soc_slo:
+            p95 = soc_slo.get("latency_p95_s")
+            p95_text = "-" if p95 is None else f"{float(p95):.3f}s"
+            lines.append(
+                "SOC SLO: "
+                f"p95={p95_text} "
+                f"avail={float(soc_slo.get('availability', 1.0)):.3f} "
+                f"lat_alarm={bool(soc_slo.get('latency_alarm', False))}"
+            )
+        soc_guardrails = result.get("soc_rollout_guardrails") or {}
+        if soc_guardrails:
+            reasons = soc_guardrails.get("alarm_reasons") or []
+            reason_text = ",".join(str(x) for x in reasons[:2]) if reasons else "-"
+            if reasons and len(reasons) > 2:
+                reason_text += ",..."
+            lines.append(
+                "SOC Rollout: "
+                f"active={bool(soc_guardrails.get('rollout_active', False))} "
+                f"rollback={bool(soc_guardrails.get('rolled_back', False))} "
+                f"hits={int(soc_guardrails.get('consecutive_alarm_hits', 0))}/"
+                f"{int(soc_guardrails.get('required_consecutive_hits', 0))} "
+                f"reasons={reason_text}"
+            )
         if self.context_controller is not None:
             lines.extend(
                 [
@@ -751,6 +814,36 @@ def parse_args():
             "(0 exits immediately on first missed window)."
         ),
     )
+    parser.add_argument(
+        "--soc-enable",
+        action="store_true",
+        help="Enable SOC runtime orchestration (canonical events + threat/workflow routing).",
+    )
+    parser.add_argument(
+        "--soc-config",
+        default=None,
+        help="Optional SOC runtime JSON config path.",
+    )
+    parser.add_argument(
+        "--soc-site-id",
+        default="site_demo",
+        help="Site identifier for canonical SOC events.",
+    )
+    parser.add_argument(
+        "--soc-camera-id",
+        default=None,
+        help="Camera identifier for canonical SOC events (default: sequence-id).",
+    )
+    parser.add_argument(
+        "--soc-threat-taxonomy-path",
+        default="data/soc/example_threat_taxonomy_v2.json",
+        help="Threat taxonomy v2 JSON path used when --soc-enable is set.",
+    )
+    parser.add_argument(
+        "--soc-print-routing",
+        action="store_true",
+        help="Log SOC routing metrics per window.",
+    )
     return parser.parse_args()
 
 
@@ -923,6 +1016,35 @@ def _resolve_num_model_frames(cfg, dataset_name, default_value=8):
     return fallback
 
 
+def _build_soc_orchestrator(args):
+    if not bool(args.soc_enable or args.soc_config):
+        return None
+
+    if args.soc_config:
+        return SOCOrchestrator.from_json_config(args.soc_config)
+
+    taxonomy = None
+    taxonomy_path = args.soc_threat_taxonomy_path
+    if taxonomy_path and not os.path.isabs(taxonomy_path):
+        taxonomy_path = os.path.join(os.path.dirname(__file__), taxonomy_path)
+    if taxonomy_path and os.path.exists(taxonomy_path):
+        try:
+            taxonomy = ThreatTaxonomyV2.from_file(taxonomy_path)
+        except Exception as exc:
+            logging.warning(
+                f"Failed to parse SOC threat taxonomy at {taxonomy_path}: {exc}. "
+                "Using default taxonomy."
+            )
+
+    camera_id = args.soc_camera_id if args.soc_camera_id else args.sequence_id
+    return SOCOrchestrator(
+        site_id=args.soc_site_id,
+        camera_id=camera_id,
+        context_field=args.context_field,
+        taxonomy=taxonomy,
+    )
+
+
 def main():
     try:
         import cv2
@@ -1055,6 +1177,15 @@ def main():
             "Focus the matplotlib window and use keys: [ ] / arrow, 1-9, a, q."
         )
 
+    soc_orchestrator = _build_soc_orchestrator(args)
+    if soc_orchestrator is not None:
+        logging.info(
+            "SOC runtime enabled: "
+            f"site_id={soc_orchestrator.site_id}, "
+            f"camera_id={soc_orchestrator.camera_id}, "
+            f"profile={soc_orchestrator.active_profile.profile_id}"
+        )
+
     fout = open(args.output_jsonl, "a") if args.output_jsonl else None
     visualizer = None
     if args.visualize == "matplotlib":
@@ -1138,6 +1269,11 @@ def main():
             result["chunk_seconds"] = args.chunk_seconds
             result["stride_seconds"] = args.stride_seconds
             result["frame_index"] = frame_idx
+            result["timestamp_utc"] = (
+                datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
+                    "+00:00", "Z"
+                )
+            )
             result[args.context_field] = ecological_context
             if context_controller is not None:
                 context_mode = context_controller.mode
@@ -1166,6 +1302,50 @@ def main():
                         result["entity_observation_source"] = "auto_motion"
                     else:
                         result["entity_observation_source"] = "auto_motion_empty"
+
+            if soc_orchestrator is not None:
+                soc_payload = soc_orchestrator.process_result(result)
+                result["soc_profile"] = soc_payload.get("profile")
+                result["soc_hardware"] = soc_payload.get("hardware")
+                result["soc_ingestion_health"] = soc_payload.get("ingestion_health")
+                result["soc_entity_track_events"] = soc_payload.get(
+                    "entity_track_events", []
+                )
+                result["soc_threat_events"] = soc_payload.get("threat_events", [])
+                result["soc_case_updates"] = soc_payload.get("case_updates", [])
+                result["soc_routing_metrics"] = soc_payload.get("routing_metrics")
+                result["soc_routing_dispatched"] = soc_payload.get(
+                    "routing_dispatched", []
+                )
+                result["soc_message_bus_publish_results"] = soc_payload.get(
+                    "message_bus_publish_results", []
+                )
+                result["soc_message_bus_stats"] = soc_payload.get("message_bus_stats", {})
+                result["soc_dead_letter"] = soc_payload.get("dead_letter", [])
+                result["soc_sla_breaches"] = soc_payload.get("sla_breaches", [])
+                result["soc_processing_seconds"] = soc_payload.get("processing_seconds")
+                result["soc_drift_metrics"] = soc_payload.get("drift_metrics", {})
+                result["soc_slo_metrics"] = soc_payload.get("slo_metrics", {})
+                result["soc_rollout_guardrails"] = soc_payload.get(
+                    "rollout_guardrails", {}
+                )
+                result["soc_hot_store_stats"] = soc_payload.get("hot_store_stats", {})
+                result["soc_event_store_stats"] = soc_payload.get(
+                    "event_store_stats", {}
+                )
+                result["soc_entity_federation"] = soc_payload.get(
+                    "entity_federation_snapshot", {}
+                )
+                result["soc_confidence_calibration"] = soc_payload.get(
+                    "confidence_calibration", {}
+                )
+                result["soc_security"] = soc_payload.get("security", {})
+                result["soc_mlops"] = soc_payload.get("mlops", {})
+                if args.soc_print_routing:
+                    logging.info(
+                        "SOC routing: %s",
+                        json.dumps(result.get("soc_routing_metrics", {}), sort_keys=True),
+                    )
 
             line = json.dumps(result)
             print(line, flush=True)

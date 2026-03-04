@@ -275,3 +275,83 @@ Outputs:
 
 - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/presentation_networked_contextual_hermes.html`
 - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/presentation_networked_contextual_hermes.pdf`
+
+## 12) SOC security readiness extension (phase-1)
+
+Main modules:
+
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/schemas.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/runtime.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/runtime_services.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/threat_intel.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/calibration.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/routing.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/message_bus.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/stores.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/federation.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/workflow.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/lavis/common/soc/interop.py`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/proto/hermes_soc_services.proto`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/tools/soc_coordination_sim.py`
+
+Implemented capabilities:
+
+- Canonical `EntityTrackEvent` and `ThreatEvent` schemas.
+- Subject-level routing policy compatible with NATS JetStream conventions.
+- Threat taxonomy v2 + hybrid anomaly scoring + confidence calibration + incident fusion.
+- Security + MLOps runtime controls:
+  - RBAC policy enforcement
+  - immutable audit-chain integrity
+  - signed model registry
+  - canary rollout assignment
+  - sustained-alarm canary rollback guardrails
+  - drift and SLO monitoring
+- Human-in-loop alert triage workflow with SLA checks and immutable audit entries.
+- Ingestion health checks for stream drop, timestamp skew, and FPS drift.
+- ONVIF profile discovery/sync service (phase-1 static-inventory support).
+- Hardware-aware profile routing (`edge_gpu_profile`, `edge_cpu_profile`, `core_gpu_profile`).
+- Optional external integration adapters:
+  - NATS JetStream message bus
+  - Redis hot-state store
+  - ClickHouse event store
+  - filesystem clip store
+- Cross-camera metadata federation for global entity continuity.
+- Live stream integration (`stream_online.py`) with SOC output fields.
+
+SOC runbook:
+
+```bash
+# Dependency + smoke validation
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/doctor.sh
+
+# Smoke test only
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/test.sh
+
+# Live run with Markov visualization + SOC overlays
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/live_viz.sh 0 warehouse_entry
+
+# Multi-feed coordination + message passing KPI test
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/coordination_test.sh
+
+# Security + MLOps primitives test
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/mlops_test.sh
+
+# Runtime service handler smoke test
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/services_test.sh
+
+# External integration readiness probe
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/integration_probe.sh --json
+
+# gRPC runtime server + smoke test
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_server.sh --host 127.0.0.1 --port 50051
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_smoke.sh --print-json
+```
+
+Supporting docs:
+
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/security_readiness_roadmap_implementation.md`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_algorithm_specs.md`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_coordination_testing.md`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_mlops_reliability_testing.md`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_runtime_services_and_integration_probe.md`
+- `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/README.md`

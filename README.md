@@ -128,6 +128,13 @@ We thank the authors of the following repositories for open-sourcing their code.
   - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/dynamic_event_tagging_design.md`
 - Network message passing + surveillance algorithm specs:
   - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/network_message_passing_algorithms.md`
+- SOC security readiness implementation + algorithm specs:
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/security_readiness_roadmap_implementation.md`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_algorithm_specs.md`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_coordination_testing.md`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_mlops_reliability_testing.md`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/soc_runtime_services_and_integration_probe.md`
+  - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/proto/hermes_soc_services.proto`
 - Research paper draft for this extension work:
   - `/Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/docs/research_paper_draft_networked_contextual_hermes.md`
 - LaTeX manuscript source and rendered PDF:
@@ -149,4 +156,25 @@ bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/presentations/
 
 # Build web HTML slides + static PDF slides
 bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/presentations/build_networked_contextual_hermes_slides.sh
+
+# SOC readiness doctor + smoke + live run
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/doctor.sh
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/test.sh
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/live_viz.sh 0 warehouse_entry
+
+# SOC multi-feed coordination + message passing KPIs
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/coordination_test.sh
+
+# SOC security + MLOps primitive checks
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/mlops_test.sh
+
+# SOC runtime service handler smoke test
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/services_test.sh
+
+# SOC external integration probe (NATS/Redis/ClickHouse/transport)
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/integration_probe.sh --json
+
+# SOC gRPC runtime server + smoke test
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_server.sh --host 127.0.0.1 --port 50051
+bash /Users/ajithsenthil/Desktop/CompPsychoVid/HERMES/run_scripts/soc/grpc_smoke.sh --print-json
 ```

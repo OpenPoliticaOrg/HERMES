@@ -1,0 +1,22 @@
+{
+  "cameras": [
+    {
+      "site_id": "site_west_01",
+      "camera_id": "cam_a01",
+      "rtsp_url": "rtsp://10.0.0.12/live",
+      "onvif_endpoint": "http://10.0.0.12/onvif/device_service",
+      "model_name": "AXIS-Q1765",
+      "stream_profile": "main",
+      "location": "north_gate"
+    },
+    {
+      "site_id": "site_west_01",
+      "camera_id": "cam_a02",
+      "rtsp_url": "rtsp://10.0.0.13/live",
+      "onvif_endpoint": "http://10.0.0.13/onvif/device_service",
+      "model_name": "HIK-4MP-IR",
+      "stream_profile": "main",
+      "location": "warehouse_entry"
+    }
+  ]
+}

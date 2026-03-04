@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package hermes.soc.v1;
+
+message BBox {
+  float x1 = 1;
+  float y1 = 2;
+  float x2 = 3;
+  float y2 = 4;
+}
+
+message EntityTrackEvent {
+  string event_id = 1;
+  string timestamp_utc = 2;
+  string site_id = 3;
+  string camera_id = 4;
+  string entity_id_local = 5;
+  string entity_id_global = 6;
+  BBox bbox = 7;
+  float track_confidence = 8;
+  string reid_embedding_ref = 9;
+  string lifecycle_state = 10; // entered|continued|reentered|exited
+  string context_label = 11;
+  float context_confidence = 12;
+  string observation_source = 13; // schedule|auto_motion|detector_tracker
+}
+
+message ThreatEvent {
+  string threat_type = 1;
+  string severity = 2;
+  float confidence_calibrated = 3;
+  repeated string entity_refs = 4;
+  repeated string camera_refs = 5;
+  string clip_ref = 6;
+  string markov_state = 7;
+  float anomaly_score = 8;
+  float fusion_score = 9;
+  string policy_action = 10; // review_required|escalate_level_1|escalate_level_2
+  repeated string explanations = 11;
+  string timestamp_utc = 12;
+  string site_id = 13;
+}
+
+message Empty {}
+
+message IngestObservationRequest {
+  EntityTrackEvent track_event = 1;
+}
+
+message ResolveProfileRequest {
+  string site_id = 1;
+  string camera_id = 2;
+  string role_hint = 3; // edge|core
+}
+
+message ResolveProfileResponse {
+  string profile_id = 1;
+  string detector_name = 2;
+  string tracker_name = 3;
+  string reid_name = 4;
+}
+
+message EntityFusionRequest {
+  EntityTrackEvent track_event = 1;
+}
+
+message ThreatScoreRequest {
+  EntityTrackEvent track_event = 1;
+}
+
+message ThreatScoreResponse {
+  ThreatEvent threat_event = 1;
+}
+
+message AlertDispatchRequest {
+  ThreatEvent threat_event = 1;
+}
+
+message FeedbackIngestRequest {
+  string case_id = 1;
+  string analyst_id = 2;
+  string label = 3;
+  string notes = 4;
+}
+
+service IngestGatewayService {
+  rpc IngestObservation(IngestObservationRequest) returns (Empty);
+}
+
+service InferenceProfileService {
+  rpc ResolveProfile(ResolveProfileRequest) returns (ResolveProfileResponse);
+}
+
+service EntityFusionService {
+  rpc UpsertEntityTrack(EntityFusionRequest) returns (Empty);
+}
+
+service ThreatScoringService {
+  rpc ScoreThreat(ThreatScoreRequest) returns (ThreatScoreResponse);
+}
+
+service AlertDispatchService {
+  rpc DispatchAlert(AlertDispatchRequest) returns (Empty);
+}
+
+service FeedbackIngestService {
+  rpc IngestFeedback(FeedbackIngestRequest) returns (Empty);
+}

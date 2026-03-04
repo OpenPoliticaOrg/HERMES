@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "minimum_candidate_confidence": 0.22,
+  "classes": {
+    "weapon": {
+      "severity": "critical",
+      "policy_action": "escalate_level_2"
+    },
+    "assault_fight": {
+      "severity": "high",
+      "policy_action": "escalate_level_2"
+    },
+    "fire_smoke": {
+      "severity": "critical",
+      "policy_action": "escalate_level_2"
+    },
+    "intrusion": {
+      "severity": "high",
+      "policy_action": "escalate_level_1"
+    },
+    "anomalous_behavior": {
+      "severity": "medium",
+      "policy_action": "review_required"
+    }
+  },
+  "event_to_threat": [
+    {
+      "event_id": "security:weapon_detected",
+      "threat_type": "weapon",
+      "severity": "critical",
+      "policy_action": "escalate_level_2",
+      "base_confidence": 0.92
+    },
+    {
+      "event_id": "security:assault_fight",
+      "threat_type": "assault_fight",
+      "severity": "high",
+      "policy_action": "escalate_level_2",
+      "base_confidence": 0.88
+    },
+    {
+      "event_id": "security:fire_smoke",
+      "threat_type": "fire_smoke",
+      "severity": "critical",
+      "policy_action": "escalate_level_2",
+      "base_confidence": 0.90
+    },
+    {
+      "event_id": "security:intrusion",
+      "threat_type": "intrusion",
+      "severity": "high",
+      "policy_action": "escalate_level_1",
+      "base_confidence": 0.80
+    },
+    {
+      "event_id": "coin:change_car_tire",
+      "threat_type": "intrusion",
+      "severity": "medium",
+      "policy_action": "review_required",
+      "base_confidence": 0.30
+    },
+    {
+      "event_id": "coin:put_on_hair_extensions",
+      "threat_type": "anomalous_behavior",
+      "severity": "low",
+      "policy_action": "review_required",
+      "base_confidence": 0.20
+    }
+  ],
+  "keyword_mappings": {
+    "weapon": "weapon",
+    "gun": "weapon",
+    "knife": "weapon",
+    "fight": "assault_fight",
+    "assault": "assault_fight",
+    "fire": "fire_smoke",
+    "smoke": "fire_smoke",
+    "intrusion": "intrusion",
+    "trespass": "intrusion",
+    "loiter": "anomalous_behavior"
+  },
+  "severity_policy_map": {
+    "critical": "escalate_level_2",
+    "high": "escalate_level_1",
+    "medium": "review_required",
+    "low": "review_required",
+    "info": "review_required"
+  }
+}

@@ -13,6 +13,15 @@ bash run_scripts/context_markov/test.sh
 ```bash
 bash run_scripts/context_markov/live.sh 0 salon
 ```
+- SOC readiness doctor + smoke:
+```bash
+bash run_scripts/soc/doctor.sh
+bash run_scripts/soc/test.sh
+```
+- SOC coordination test:
+```bash
+bash run_scripts/soc/coordination_test.sh
+```
 
 ## Goal
 Enable HERMES classification to:
@@ -35,6 +44,20 @@ Current implemented capabilities:
   and color-coded entity trajectories over windows.
 - Optional motion-blob-based automatic entity observation mode
   (`--entity-observation-mode auto_motion`).
+- SOC runtime overlays and outputs in live stream:
+  - canonical `EntityTrackEvent` / `ThreatEvent`
+  - subject-priority routing metrics
+  - human-in-loop case updates
+  - ingestion-health diagnostics
+  - entity federation + hot/event store stats
+  - drift/SLO monitoring metrics
+  - rollout guardrail/rollback telemetry (`soc_rollout_guardrails`)
+  - RBAC/audit and MLOps rollout metadata
+- gRPC-aligned runtime service handlers for ingest/profile/fusion/scoring/dispatch/feedback
+  exposed through `lavis/common/soc/runtime_services.py`.
+- Network-accessible gRPC runtime server with smoke validation:
+  - `run_scripts/soc/grpc_server.sh`
+  - `run_scripts/soc/grpc_smoke.sh`
 
 Current constraint:
 - Best quality entity lifecycle/sequence updates use externally provided
